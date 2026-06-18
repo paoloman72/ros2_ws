@@ -88,7 +88,7 @@ class TurtleAvoidance(Node):
 
             if self.cooldown_ticks > 0:
                 self.cooldown_ticks -= 1
-                cmd.linear.x = 2.0
+                cmd.linear.x = 1.5
                 self.cmd_pub.publish(cmd)
                 return
 
