@@ -50,7 +50,7 @@ class TurtleAvoidance(Node):
         if self.pose is None:
             return None
 
-        margin = 1.5
+        margin = 1.0
 
         if self.pose.x < margin:
             return 'left'
