@@ -9,7 +9,9 @@ from geometry_msgs.msg import Twist
 from turtlesim_msgs.action import RotateAbsolute
 from turtlesim_msgs.msg import Pose
 
-# Turtle avoidance class definition
+# Turtle avoidance class definition:
+#   this class implements a simple wall avoidance behavior for a turtle in the turtlesim environment.
+#   The turtle moves forward until it detects a wall, then rotates to a safe heading away from the wall.
 class TurtleAvoidance(Node):
 
     def __init__(self):
