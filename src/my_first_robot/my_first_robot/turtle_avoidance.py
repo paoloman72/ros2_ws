@@ -9,7 +9,7 @@ from geometry_msgs.msg import Twist
 from turtlesim_msgs.action import RotateAbsolute
 from turtlesim_msgs.msg import Pose
 
-
+# Turtle avoidance class definition
 class TurtleAvoidance(Node):
 
     def __init__(self):
