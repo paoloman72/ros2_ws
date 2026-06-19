@@ -37,7 +37,9 @@ class TurtleAvoidance(Node):
         )
 
         self.pose = None
+        # Simple two-state controller: move straight, then rotate when near a wall.
         self.state = 'forward'
+        # Keep moving forward briefly after a turn to avoid immediate re-detection.
         self.cooldown_ticks = 0
         self.goal_in_progress = False
 
@@ -50,6 +52,7 @@ class TurtleAvoidance(Node):
         if self.pose is None:
             return None
 
+        # Turtlesim world is 11x11; keep a safety margin from each boundary.
         margin = 1.0
 
         if self.pose.x < margin:
@@ -64,6 +67,7 @@ class TurtleAvoidance(Node):
         return None
 
     def safe_heading_for_wall(self, wall):
+        # Heading points away from the detected wall.
         if wall == 'left':
             return 0.0
         if wall == 'right':
@@ -76,6 +80,7 @@ class TurtleAvoidance(Node):
         return 0.0
 
     def normalize_angle(self, angle):
+        # Wrap angle into [-pi, pi] for stable rotate goals.
         return math.atan2(math.sin(angle), math.cos(angle))
 
     def control_loop(self):
@@ -95,6 +100,7 @@ class TurtleAvoidance(Node):
             wall = self.detect_wall()
 
             if wall is not None:
+                # Stop before sending a new absolute rotation goal.
                 cmd.linear.x = 0.0
                 cmd.angular.z = 0.0
                 self.cmd_pub.publish(cmd)
@@ -130,6 +136,7 @@ class TurtleAvoidance(Node):
         if self.goal_in_progress:
             return
 
+        # Prevent overlapping action requests.
         self.goal_in_progress = True
 
         goal_msg = RotateAbsolute.Goal()
@@ -177,6 +184,7 @@ class TurtleAvoidance(Node):
         )
 
         self.goal_in_progress = False
+        # Small forward-only grace period after rotating.
         self.cooldown_ticks = 10
         self.state = 'forward'
 
