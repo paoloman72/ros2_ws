@@ -55,7 +55,7 @@ class TurtleAvoidance(Node):
             return None
 
         # Turtlesim world is 11x11; keep a safety margin from each boundary.
-        margin = 0.5
+        margin = 1.0
 
         if self.pose.x < margin:
             return 'left'
