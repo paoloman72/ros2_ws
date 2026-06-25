@@ -103,18 +103,6 @@
   </xacro:macro>
 
   <!-- ========================= -->
-  <!-- World                     -->
-  <!-- ========================= -->
-
-  <link name="world"/>
-
-  <joint name="world_to_base_link" type="fixed">
-    <parent link="world"/>
-    <child link="base_link"/>
-    <origin xyz="0 0 ${base_height / 2.0}" rpy="0 0 0"/>
-  </joint>
-
-  <!-- ========================= -->
   <!-- Base                      -->
   <!-- ========================= -->
 
@@ -223,5 +211,32 @@
     <child link="lidar_link"/>
     <origin xyz="${lidar_x} 0 ${lidar_z}" rpy="0 0 0"/>
   </joint>
+
+  <!-- ========================= -->
+  <!-- Gazebo Diff Drive         -->
+  <!-- ========================= -->
+
+  <gazebo>
+    <plugin
+      filename="gz-sim-diff-drive-system"
+      name="gz::sim::systems::DiffDrive">
+
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+
+      <wheel_separation>${2.0 * wheel_y}</wheel_separation>
+      <wheel_radius>${wheel_radius}</wheel_radius>
+
+      <topic>/cmd_vel</topic>
+      <odom_topic>/odom</odom_topic>
+      <tf_topic>/tf</tf_topic>
+
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_link</child_frame_id>
+
+      <odom_publish_frequency>30</odom_publish_frequency>
+
+    </plugin>
+  </gazebo>
 
 </robot>
