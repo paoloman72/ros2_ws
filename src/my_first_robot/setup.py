@@ -1,3 +1,4 @@
+import os
 from setuptools import find_packages, setup
 from glob import glob
 
@@ -11,9 +12,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch',
-        glob('launch/*.launch.py')
-),
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+        (os.path.join('share', package_name, 'urdf'), glob('urdf/*')),        
     ],
     package_data={'': ['py.typed']},
     install_requires=['setuptools'],
@@ -33,6 +33,7 @@ setup(
             'counter_subscriber = my_first_robot.counter_subscriber:main',
             'turtle_avoidance = my_first_robot.turtle_avoidance:main',
             'turtle_spawner = my_first_robot.turtle_spawner:main',
+            'moving_tf_broadcaster = my_first_robot.moving_tf_broadcaster:main',
         ],
     }
 )
