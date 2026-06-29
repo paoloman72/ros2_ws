@@ -13,7 +13,7 @@ def generate_launch_description():
     pkg_path = get_package_share_path('mobile_robot')
 
     xacro_file = pkg_path / 'urdf' / 'robot.urdf.xacro'
-    world_file = pkg_path / 'worlds' / 'empty.world.sdf'
+    world_file = pkg_path / 'worlds' / 'mobile_robot.world.sdf'
 
     robot_description = ParameterValue(
         Command(['xacro ', str(xacro_file)]),
@@ -59,13 +59,29 @@ def generate_launch_description():
             '/odom@gz.msgs.Odometry[nav_msgs/msg/Odometry',
             '/tf@gz.msgs.Pose_V[tf2_msgs/msg/TFMessage',
             '/clock@gz.msgs.Clock[rosgraph_msgs/msg/Clock',
-        ],
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',        ],
         output='screen'
     )
 
+    scan_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=[
+            '--x', '0',
+            '--y', '0',
+            '--z', '0',
+            '--roll', '0',
+            '--pitch', '0',
+            '--yaw', '0',
+            '--frame-id', 'lidar_link',
+            '--child-frame-id', 'mobile_robot/base_link/lidar_sensor'
+        ],
+        output='screen'
+    )
     return LaunchDescription([
         gazebo,
         robot_state_publisher,
         spawn_robot,
-        bridge
+        bridge,
+        scan_tf
     ])
