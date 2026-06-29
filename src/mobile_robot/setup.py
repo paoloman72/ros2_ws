@@ -33,6 +33,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'teleop_keyboard = mobile_robot.teleop_keyboard:main',
         ],
     },
 )
