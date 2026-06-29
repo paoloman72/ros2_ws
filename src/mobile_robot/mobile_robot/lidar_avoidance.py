@@ -1,3 +1,5 @@
+import math
+
 import rclpy
 from rclpy.node import Node
 
@@ -25,59 +27,90 @@ class LidarAvoidance(Node):
 
         self.safe_distance = 0.6
 
+        self.forward_speed = 0.25
+        self.turn_speed = 0.7
+
         self.last_state = None
 
         self.get_logger().info("Lidar avoidance started")
 
-    def scan_callback(self, msg):
-
+    def get_range_window(self, msg, start_ratio, end_ratio):
         ranges = list(msg.ranges)
 
-        if len(ranges) == 0:
-            return
+        start_index = int(len(ranges) * start_ratio)
+        end_index = int(len(ranges) * end_ratio)
 
-        center = len(ranges) // 2
-
-        window = 20
-
-        front = ranges[center-window:center+window]
+        window = ranges[start_index:end_index]
 
         valid = [
-            r for r in front
-            if msg.range_min < r < msg.range_max
+            r for r in window
+            if math.isfinite(r) and msg.range_min < r < msg.range_max
         ]
 
-        if len(valid) == 0:
-            return
+        if valid:
+            return min(valid)
 
-        min_distance = min(valid)
+        # Nessun ostacolo rilevato nel settore
+        return float("inf")
 
+    def get_front_distance(self, msg):
+        return self.get_range_window(msg, 0.4, 0.6)
+
+    def get_left_distance(self, msg):
+        return self.get_range_window(msg, 0.65, 0.85)
+
+    def get_right_distance(self, msg):
+        return self.get_range_window(msg, 0.15, 0.35)
+
+    def decide_motion(self, front_distance, left_distance, right_distance):
         cmd = Twist()
 
-        if min_distance < self.safe_distance:
-            state = "avoiding"
-            cmd.angular.z = 0.7
-        else:
-            state = "moving_forward"
-            cmd.linear.x = 0.25
+        if front_distance < self.safe_distance:
+            left = left_distance if left_distance is not None else 0.0
+            right = right_distance if right_distance is not None else 0.0
 
-        if state != self.last_state:
-            if state == "avoiding":
-                self.get_logger().info(
-                    f"Obstacle detected at {min_distance:.2f} m, steering left"
-                )
+            if left >= right:
+                cmd.angular.z = self.turn_speed
+                return "avoiding_left", cmd
             else:
-                self.get_logger().info(
-                    f"Path clear, moving forward. Front min distance: {min_distance:.2f} m"
-                )
+                cmd.angular.z = -self.turn_speed
+                return "avoiding_right", cmd
 
-            self.last_state = state
+        cmd.linear.x = self.forward_speed
+        return "moving_forward", cmd
+
+    def log_state(self, state, front, left, right):
+        if state == self.last_state:
+            return
+
+        self.get_logger().info(
+            f"{state} | front={front} left={left} right={right}"
+        )
+
+        self.last_state = state
+
+    def scan_callback(self, msg):
+        front_distance = self.get_front_distance(msg)
+        left_distance = self.get_left_distance(msg)
+        right_distance = self.get_right_distance(msg)
+
+        state, cmd = self.decide_motion(
+            front_distance,
+            left_distance,
+            right_distance
+        )
+
+        self.log_state(
+            state,
+            front_distance,
+            left_distance,
+            right_distance
+        )
 
         self.cmd_pub.publish(cmd)
 
 
 def main(args=None):
-
     rclpy.init(args=args)
 
     node = LidarAvoidance()
