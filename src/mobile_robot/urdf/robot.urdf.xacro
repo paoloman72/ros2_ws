@@ -276,4 +276,32 @@
     </sensor>
   </gazebo>
 
+  <!-- ========================= -->
+  <!-- IMU                       -->
+  <!-- ========================= -->
+
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <box size="0.08 0.08 0.03"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.13" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <pose>0 0 0 0 0 0</pose>
+      <always_on>true</always_on>
+      <update_rate>50</update_rate>
+      <topic>/imu</topic>
+    </sensor>
+  </gazebo>
+  
 </robot>

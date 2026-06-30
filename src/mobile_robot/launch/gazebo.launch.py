@@ -59,7 +59,9 @@ def generate_launch_description():
             '/odom@gz.msgs.Odometry[nav_msgs/msg/Odometry',
             '/tf@gz.msgs.Pose_V[tf2_msgs/msg/TFMessage',
             '/clock@gz.msgs.Clock[rosgraph_msgs/msg/Clock',
-            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',        ],
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+        ],
         output='screen'
     )
 
