@@ -13,7 +13,7 @@ def generate_launch_description():
     pkg_path = get_package_share_path('mobile_robot')
 
     xacro_file = pkg_path / 'urdf' / 'robot.urdf.xacro'
-    world_file = pkg_path / 'worlds' / 'mobile_robot.world.sdf'
+    world_file = pkg_path / 'worlds' / 'slam_world.world.sdf'
 
     robot_description = ParameterValue(
         Command(['xacro ', str(xacro_file)]),
