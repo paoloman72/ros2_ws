@@ -6,4 +6,3 @@ log/
 __pycache__/
 
 .vscode/
-/src/slam_toolbox/
