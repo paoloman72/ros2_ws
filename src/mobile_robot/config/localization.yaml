@@ -1,0 +1,41 @@
+map_server:
+  ros__parameters:
+    use_sim_time: true
+    yaml_filename: "/ros2_ws/src/mobile_robot/maps/slam_world_map.yaml"
+
+amcl:
+  ros__parameters:
+    use_sim_time: true
+
+    base_frame_id: "base_link"
+    odom_frame_id: "odom"
+    global_frame_id: "map"
+
+    scan_topic: "/scan"
+
+    min_particles: 500
+    max_particles: 2000
+
+    update_min_d: 0.25
+    update_min_a: 0.2
+
+    transform_tolerance: 1.0
+
+    laser_model_type: "likelihood_field"
+    max_beams: 60
+
+    set_initial_pose: true
+
+    initial_pose:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      yaw: 0.0
+      
+lifecycle_manager_localization:
+  ros__parameters:
+    use_sim_time: true
+    autostart: true
+    node_names:
+      - map_server
+      - amcl
