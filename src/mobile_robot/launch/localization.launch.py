@@ -15,6 +15,12 @@ def generate_launch_description():
         "localization.yaml"
     )
 
+    rviz_config = os.path.join(
+        pkg_share,
+        "rviz",
+        "mobile_robot.rviz"
+    )
+
     return LaunchDescription([
         Node(
             package="nav2_map_server",
@@ -38,5 +44,19 @@ def generate_launch_description():
             name="lifecycle_manager_localization",
             output="screen",
             parameters=[params_file],
+        ),
+
+        Node(
+            package="rviz2",
+            executable="rviz2",
+            name="rviz2",
+            output="screen",
+            arguments=[
+                "-d",
+                rviz_config
+            ],
+            parameters=[
+                {"use_sim_time": True}
+            ],
         ),
     ])
