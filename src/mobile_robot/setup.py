@@ -41,6 +41,7 @@ setup(
         'console_scripts': [
             'teleop_keyboard = mobile_robot.teleop_keyboard:main',
             'lidar_avoidance = mobile_robot.lidar_avoidance:main',
+            "find_free_space = mobile_robot.find_free_space:main",
         ],
     },
 )
