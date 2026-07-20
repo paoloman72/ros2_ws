@@ -12,6 +12,7 @@ from rclpy.time import Time
 from geometry_msgs.msg import PoseStamped
 from nav2_msgs.action import NavigateToPose
 from sensor_msgs.msg import LaserScan
+from action_msgs.msg import GoalStatus
 
 from tf2_ros import Buffer, TransformException, TransformListener
 
@@ -325,23 +326,36 @@ class FindFreeSpace(Node):
         wrapped_result = future.result()
 
         if wrapped_result is None:
-            self.get_logger().error(
-                "Navigation returned no result"
-            )
+            self.get_logger().error("Navigation returned no result")
             self.goal_active = False
             return
 
+        status = wrapped_result.status
         result = wrapped_result.result
 
-        if result.error_code == NavigateToPose.Result.NONE:
-            self.get_logger().info(
-                "Free-space goal reached"
-            )
-        else:
+        self.get_logger().info(
+            "NavigateToPose finished: "
+            f"status={status}, "
+            f"error_code={result.error_code}, "
+            f"error_msg='{result.error_msg}'"
+        )
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.get_logger().info("Free-space goal reached")
+
+        elif status == GoalStatus.STATUS_ABORTED:
             self.get_logger().error(
-                "Navigation failed: "
+                "Navigation goal aborted: "
                 f"code={result.error_code}, "
                 f"message='{result.error_msg}'"
+            )
+
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.get_logger().warn("Navigation goal canceled")
+
+        else:
+            self.get_logger().warn(
+                f"Navigation ended with unexpected status {status}"
             )
 
         self.goal_active = False

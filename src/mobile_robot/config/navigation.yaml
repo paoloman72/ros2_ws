@@ -41,19 +41,19 @@ controller_server:
       plugin: "dwb_core::DWBLocalPlanner"
 
       min_vel_x: 0.0
-      max_vel_x: 0.25
+      max_vel_x: 0.3
       max_vel_y: 0.0
 
       max_vel_theta: 1.0
       min_speed_xy: 0.0
-      max_speed_xy: 0.25
+      max_speed_xy: 0.3
       min_speed_theta: 0.0
 
-      acc_lim_x: 0.5
+      acc_lim_x: 0.6
       acc_lim_y: 0.0
       acc_lim_theta: 1.0
 
-      decel_lim_x: -0.5
+      decel_lim_x: -0.6
       decel_lim_y: 0.0
       decel_lim_theta: -1.0
 
