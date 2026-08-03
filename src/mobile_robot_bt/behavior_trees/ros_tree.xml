@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="RosSequence">
+      <RosLog message="Mission BT connected to ROS 2"/>
+      <GenerateNumber value="{shared_number}"/>
+      <PrintNumber value="{shared_number}"/>
+      <RosLog message="ROS tree completed"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

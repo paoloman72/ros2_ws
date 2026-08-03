@@ -283,7 +283,7 @@ class FindFreeSpace(Node):
         nav_goal = NavigateToPose.Goal()
         nav_goal.pose = pose
         nav_goal.behavior_tree = ""
-
+        
         self.goal_active = True
 
         future = self.nav_client.send_goal_async(

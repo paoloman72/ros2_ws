@@ -16,6 +16,7 @@
   <xacro:property name="wheel_width"  value="0.08"/>
   <xacro:property name="wheel_y"      value="0.29"/>
   <xacro:property name="wheel_z"      value="-0.05"/>
+  <xacro:property name="wheel_x"      value="0.0"/>
 
   <xacro:property name="caster_radius" value="0.08"/>
   <xacro:property name="caster_x"      value="-0.35"/>
@@ -97,7 +98,7 @@
     <joint name="${prefix}_wheel_joint" type="continuous">
       <parent link="base_link"/>
       <child link="${prefix}_wheel_link"/>
-      <origin xyz="0 ${y} ${wheel_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${y} ${wheel_z}" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
     </joint>
   </xacro:macro>
