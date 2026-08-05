@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="FirstMission">
+
+      <RosLog message="First mission started"/>
+
+      <CreatePose
+        x="1.0"
+        y="0.0"
+        yaw="0.0"
+        frame_id="map"
+        pose="{navigation_goal}"/>
+
+      <NavigateToPose pose="{navigation_goal}"/>
+
+      <RosLog message="First mission completed"/>
+
+    </Sequence>
+  </BehaviorTree>
+</root>

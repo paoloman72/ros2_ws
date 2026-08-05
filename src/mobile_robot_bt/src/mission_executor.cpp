@@ -8,6 +8,8 @@
 #include "mobile_robot_bt/generate_number.hpp"
 #include "mobile_robot_bt/print_number.hpp"
 #include "mobile_robot_bt/ros_log.hpp"
+#include "mobile_robot_bt/create_pose.hpp"
+#include "mobile_robot_bt/navigate_to_pose.hpp"
 
 using namespace std::chrono_literals;
 
@@ -42,6 +44,12 @@ public:
 
     factory_.registerNodeType<mobile_robot_bt::RosLog>(
         "RosLog");
+
+    factory_.registerNodeType<mobile_robot_bt::CreatePose>(
+        "CreatePose");
+
+    factory_.registerNodeType<mobile_robot_bt::NavigateToPose>(
+        "NavigateToPose");
 
     blackboard_ = BT::Blackboard::create();
     blackboard_->set<rclcpp::Node *>("node", this);

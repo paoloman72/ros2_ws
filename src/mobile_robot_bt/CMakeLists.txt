@@ -31,6 +31,8 @@ add_executable(mission_executor
   src/generate_number.cpp
   src/print_number.cpp
   src/ros_log.cpp
+  src/create_pose.cpp
+  src/navigate_to_pose.cpp
 )
 
 target_include_directories(mission_executor PUBLIC
@@ -40,6 +42,9 @@ target_include_directories(mission_executor PUBLIC
 
 ament_target_dependencies(mission_executor
   rclcpp
+  rclcpp_action
+  nav2_msgs
+  geometry_msgs
   behaviortree_cpp
 )
 
