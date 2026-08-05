@@ -10,6 +10,7 @@
 #include "mobile_robot_bt/ros_log.hpp"
 #include "mobile_robot_bt/create_pose.hpp"
 #include "mobile_robot_bt/navigate_to_pose.hpp"
+#include "mobile_robot_bt/find_free_space.hpp"
 
 using namespace std::chrono_literals;
 
@@ -51,6 +52,9 @@ public:
     factory_.registerNodeType<mobile_robot_bt::NavigateToPose>(
         "NavigateToPose");
 
+    factory_.registerNodeType<mobile_robot_bt::FindFreeSpace>(
+        "FindFreeSpace");
+        
     blackboard_ = BT::Blackboard::create();
     blackboard_->set<rclcpp::Node *>("node", this);
 

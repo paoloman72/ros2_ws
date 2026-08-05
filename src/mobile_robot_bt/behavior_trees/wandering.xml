@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Repeat num_cycles="-1">
+      <Sequence name="WanderingMission">
+
+        <RosLog message="Searching for a free space"/>
+
+        <FindFreeSpace
+          min_distance="2.0"
+          max_distance="4.0"
+          max_search_angle="3.14159"
+          corridor_half_width="0.40"
+          obstacle_clearance="0.50"
+          map_frame="map"
+          base_frame="base_link"
+          goal="{navigation_goal}"/>
+
+        <NavigateToPose pose="{navigation_goal}"/>
+
+        <RosLog message="Goal reached, searching again"/>
+
+      </Sequence>
+    </Repeat>
+  </BehaviorTree>
+</root>

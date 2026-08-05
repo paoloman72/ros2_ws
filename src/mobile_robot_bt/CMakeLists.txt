@@ -12,6 +12,9 @@ find_package(rclcpp_action REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -33,6 +36,7 @@ add_executable(mission_executor
   src/ros_log.cpp
   src/create_pose.cpp
   src/navigate_to_pose.cpp
+  src/find_free_space.cpp
 )
 
 target_include_directories(mission_executor PUBLIC
@@ -45,6 +49,9 @@ ament_target_dependencies(mission_executor
   rclcpp_action
   nav2_msgs
   geometry_msgs
+  sensor_msgs
+  tf2_ros
+  tf2_geometry_msgs
   behaviortree_cpp
 )
 
