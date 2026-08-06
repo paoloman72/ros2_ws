@@ -11,6 +11,7 @@
 #include "mobile_robot_bt/create_pose.hpp"
 #include "mobile_robot_bt/navigate_to_pose.hpp"
 #include "mobile_robot_bt/find_free_space.hpp"
+#include "behaviortree_cpp/loggers/groot2_publisher.h"
 
 using namespace std::chrono_literals;
 
@@ -21,8 +22,10 @@ public:
   : Node("mission_executor")
   {
     declare_parameter<std::string>("bt_xml", "");
+    declare_parameter<int>("groot_port", 1669);
 
     const auto bt_xml = get_parameter("bt_xml").as_string();
+    const auto groot_port = static_cast<uint16_t>(get_parameter("groot_port").as_int());
 
     if (bt_xml.empty()) {
       throw std::runtime_error(
@@ -62,6 +65,9 @@ public:
         bt_xml,
         blackboard_);
 
+    groot_publisher_ =
+      std::make_unique<BT::Groot2Publisher>(tree_, groot_port);
+
     timer_ = create_wall_timer(
       100ms,
       std::bind(&MissionExecutor::tickTree, this));
@@ -85,6 +91,7 @@ private:
   BT::Tree tree_;
   rclcpp::TimerBase::SharedPtr timer_;
   BT::Blackboard::Ptr blackboard_;
+  std::unique_ptr<BT::Groot2Publisher> groot_publisher_;
 };
 
 int main(int argc, char ** argv)

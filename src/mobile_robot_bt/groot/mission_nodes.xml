@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<root BTCPP_format="4">
+  <TreeNodesModel>
+
+    <Action ID="RosLog">
+      <input_port name="message" type="std::string"/>
+    </Action>
+
+    <Action ID="FindFreeSpace">
+      <output_port
+        name="goal"
+        type="geometry_msgs::msg::PoseStamped"/>
+
+      <input_port name="min_distance" type="double"/>
+      <input_port name="max_distance" type="double"/>
+      <input_port name="max_search_angle" type="double"/>
+      <input_port name="corridor_half_width" type="double"/>
+      <input_port name="obstacle_clearance" type="double"/>
+      <input_port name="map_frame" type="std::string"/>
+      <input_port name="base_frame" type="std::string"/>
+    </Action>
+
+    <Action ID="NavigateToPose">
+      <input_port
+        name="pose"
+        type="geometry_msgs::msg::PoseStamped"/>
+    </Action>
+
+    <Action ID="CreatePose">
+      <input_port name="x" type="double"/>
+      <input_port name="y" type="double"/>
+      <input_port name="yaw" type="double"/>
+      <input_port name="frame_id" type="std::string"/>
+      <output_port
+        name="pose"
+        type="geometry_msgs::msg::PoseStamped"/>
+    </Action>
+
+    <Action ID="PrintMessage">
+      <input_port name="message" type="std::string"/>
+    </Action>
+
+    <Action ID="GenerateNumber">
+      <output_port name="value" type="int"/>
+    </Action>
+
+    <Action ID="PrintNumber">
+      <input_port name="value" type="int"/>
+    </Action>
+
+  </TreeNodesModel>
+</root>
