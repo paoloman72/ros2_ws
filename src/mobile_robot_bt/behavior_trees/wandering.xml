@@ -19,9 +19,11 @@
 
         <NavigateToPose pose="{navigation_goal}"/>
 
-        <RosLog message="Goal reached, searching again"/>
+        <RosLog message="Goal reached, waiting"/>
+
+        <Wait seconds="3.0"/>
 
       </Sequence>
-    </Repeat>
+    </Repeat>  
   </BehaviorTree>
 </root>

@@ -37,6 +37,7 @@ add_executable(mission_executor
   src/create_pose.cpp
   src/navigate_to_pose.cpp
   src/find_free_space.cpp
+  src/wait.cpp
 )
 
 target_include_directories(mission_executor PUBLIC

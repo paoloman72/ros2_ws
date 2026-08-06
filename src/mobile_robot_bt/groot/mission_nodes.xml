@@ -49,5 +49,9 @@
       <input_port name="value" type="int"/>
     </Action>
 
+    <Action ID="Wait">
+      <input_port name="seconds" type="double"/>
+    </Action>    
+
   </TreeNodesModel>
 </root>

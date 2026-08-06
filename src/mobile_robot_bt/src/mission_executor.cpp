@@ -12,6 +12,7 @@
 #include "mobile_robot_bt/navigate_to_pose.hpp"
 #include "mobile_robot_bt/find_free_space.hpp"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
+#include "mobile_robot_bt/wait.hpp"
 
 using namespace std::chrono_literals;
 
@@ -57,6 +58,9 @@ public:
 
     factory_.registerNodeType<mobile_robot_bt::FindFreeSpace>(
         "FindFreeSpace");
+
+    factory_.registerNodeType<mobile_robot_bt::Wait>(
+        "Wait");        
         
     blackboard_ = BT::Blackboard::create();
     blackboard_->set<rclcpp::Node *>("node", this);
