@@ -2,28 +2,39 @@
 
 <root BTCPP_format="4" main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
-    <Repeat num_cycles="-1">
-      <Sequence name="WanderingMission">
+    <Sequence name="WanderingStartup">
 
-        <RosLog message="Searching for a free space"/>
+      <WaitForRobotReady
+        scan_topic="/scan"
+        map_frame="map"
+        base_frame="base_link"
+        timeout="15.0"/>
 
-        <FindFreeSpace
-          min_distance="2.0"
-          max_distance="4.0"
-          max_search_angle="3.14159"
-          corridor_half_width="0.40"
-          obstacle_clearance="0.50"
-          map_frame="map"
-          base_frame="base_link"
-          goal="{navigation_goal}"/>
+      <Repeat num_cycles="-1">
+        <Sequence name="WanderingMission">
 
-        <NavigateToPose pose="{navigation_goal}"/>
+          <RosLog message="Searching for a free space"/>
 
-        <RosLog message="Goal reached, waiting"/>
+          <RetryUntilSuccessful num_attempts="-1">
+            <FindFreeSpace
+              min_distance="2.0"
+              max_distance="4.0"
+              max_search_angle="3.14159"
+              corridor_half_width="0.40"
+              obstacle_clearance="0.50"
+              map_frame="map"
+              base_frame="base_link"
+              goal="{navigation_goal}"/>
+          </RetryUntilSuccessful>
 
-        <Wait seconds="3.0"/>
+          <NavigateToPose pose="{navigation_goal}"/>
 
-      </Sequence>
-    </Repeat>  
+          <RosLog message="Goal reached, waiting"/>
+
+          <Wait seconds="3.0"/>
+
+        </Sequence>
+      </Repeat>
+    </Sequence>
   </BehaviorTree>
 </root>

@@ -326,6 +326,9 @@ BT::NodeStatus FindFreeSpace::tryCreateGoal()
       node_->get_logger(),
       "FindFreeSpace: no valid candidate found");
 
+    std::lock_guard<std::mutex> lock(scan_mutex_);
+    latest_scan_.reset();
+
     return BT::NodeStatus::FAILURE;
   }
 
