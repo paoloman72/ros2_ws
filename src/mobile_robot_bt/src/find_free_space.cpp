@@ -136,8 +136,7 @@ FindFreeSpace::findCandidate(const LaserScan & scan) const
 
       // Preferisce goal lontani e, a parità, più frontali.
       const double score =
-        candidate_distance -
-        0.1 * std::abs(center_angle);
+        candidate_distance - 0.5 * std::abs(center_angle);
 
       if (score > best_score)
       {
