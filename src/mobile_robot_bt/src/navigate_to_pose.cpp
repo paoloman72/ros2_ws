@@ -20,9 +20,18 @@ NavigateToPose::NavigateToPose(
       "NavigateToPose: blackboard entry 'node' is missing or null");
   }
 
+  const auto robot_namespace =
+    config.blackboard->get<std::string>(
+      "robot_namespace");
+
+  const std::string action_name =
+    robot_namespace.empty()
+    ? "/navigate_to_pose"
+    : robot_namespace + "/navigate_to_pose";
+
   client_ = rclcpp_action::create_client<Action>(
     node_,
-    "/navigate_to_pose");
+    action_name);
 }
 
 BT::PortsList NavigateToPose::providedPorts()

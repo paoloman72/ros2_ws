@@ -5,7 +5,7 @@
     <Sequence name="WanderingStartup">
 
       <WaitForRobotReady
-        scan_topic="/scan"
+        scan_topic="scan"
         map_frame="map"
         base_frame="base_link"
         timeout="15.0"/>

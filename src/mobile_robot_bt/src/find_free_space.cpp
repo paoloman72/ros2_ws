@@ -32,7 +32,7 @@ FindFreeSpace::FindFreeSpace(
     *tf_buffer_);
 
   scan_subscription_ = node_->create_subscription<LaserScan>(
-    "/scan",
+    "scan",
     rclcpp::SensorDataQoS(),
     std::bind(
       &FindFreeSpace::scanCallback,
