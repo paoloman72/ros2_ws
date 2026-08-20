@@ -66,16 +66,8 @@ public:
     factory_.registerNodeType<mobile_robot_bt::WaitForRobotReady>(
       "WaitForRobotReady");
         
-    declare_parameter<std::string>("robot_namespace", "");
-
-    const auto robot_namespace =
-      get_parameter("robot_namespace").as_string();
-
     blackboard_ = BT::Blackboard::create();
     blackboard_->set<rclcpp::Node *>("node", this);
-    blackboard_->set<std::string>(
-      "robot_namespace",
-      robot_namespace);
 
     tree_ = factory_.createTreeFromFile(
         bt_xml,
