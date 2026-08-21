@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <RosLog message="Before external plugin"/>
+
+      <CustomHello
+        message="External BT plugin loaded successfully"/>
+
+      <RosLog message="After external plugin"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

@@ -25,6 +25,9 @@ public:
   {
     declare_parameter<std::string>("bt_xml", "");
     declare_parameter<int>("groot_port", 1669);
+    declare_parameter<std::vector<std::string>>(
+      "bt_plugins",
+      std::vector<std::string>{});
 
     const auto bt_xml = get_parameter("bt_xml").as_string();
     const auto groot_port = static_cast<uint16_t>(get_parameter("groot_port").as_int());
@@ -65,7 +68,19 @@ public:
 
     factory_.registerNodeType<mobile_robot_bt::WaitForRobotReady>(
       "WaitForRobotReady");
-        
+
+    const auto plugins =
+      get_parameter("bt_plugins").as_string_array();
+
+    for (const auto & plugin : plugins) {
+      RCLCPP_INFO(
+        get_logger(),
+        "Loading BT plugin: %s",
+        plugin.c_str());
+
+      factory_.registerFromPlugin(plugin);
+    }
+    
     blackboard_ = BT::Blackboard::create();
     blackboard_->set<rclcpp::Node *>("node", this);
 
