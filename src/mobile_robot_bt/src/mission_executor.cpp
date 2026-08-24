@@ -4,9 +4,6 @@
 
 #include "behaviortree_cpp/bt_factory.h"
 #include "rclcpp/rclcpp.hpp"
-#include "mobile_robot_bt/print_message.hpp"
-#include "mobile_robot_bt/generate_number.hpp"
-#include "mobile_robot_bt/print_number.hpp"
 #include "mobile_robot_bt/ros_log.hpp"
 #include "mobile_robot_bt/create_pose.hpp"
 #include "mobile_robot_bt/navigate_to_pose.hpp"
@@ -41,15 +38,6 @@ public:
       get_logger(),
       "Loading Behavior Tree from: %s",
       bt_xml.c_str());
-
-    factory_.registerNodeType<mobile_robot_bt::PrintMessage>(
-        "PrintMessage");
-
-    factory_.registerNodeType<mobile_robot_bt::GenerateNumber>(
-        "GenerateNumber");
-
-    factory_.registerNodeType<mobile_robot_bt::PrintNumber>(
-        "PrintNumber");
 
     factory_.registerNodeType<mobile_robot_bt::RosLog>(
         "RosLog");
