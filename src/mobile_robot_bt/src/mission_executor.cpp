@@ -55,19 +55,10 @@ public:
         "RosLog");
 
     factory_.registerNodeType<mobile_robot_bt::CreatePose>(
-        "CreatePose");
-
-    factory_.registerNodeType<mobile_robot_bt::NavigateToPose>(
-        "NavigateToPose");
-
-    factory_.registerNodeType<mobile_robot_bt::FindFreeSpace>(
-        "FindFreeSpace");
+      "CreatePose");
 
     factory_.registerNodeType<mobile_robot_bt::Wait>(
-        "Wait");        
-
-    factory_.registerNodeType<mobile_robot_bt::WaitForRobotReady>(
-      "WaitForRobotReady");
+      "Wait");
 
     const auto plugins =
       get_parameter("bt_plugins").as_string_array();

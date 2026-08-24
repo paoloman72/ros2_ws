@@ -35,10 +35,8 @@ add_executable(mission_executor
   src/print_number.cpp
   src/ros_log.cpp
   src/create_pose.cpp
-  src/navigate_to_pose.cpp
-  src/find_free_space.cpp
   src/wait.cpp
-  src/wait_for_robot_ready.cpp
+  
 )
 
 target_include_directories(mission_executor PUBLIC
