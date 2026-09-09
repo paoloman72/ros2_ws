@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>bt_devkit</name>
+  <version>0.1.0</version>
+  <description>
+    Local development kit for IPCEI custom Behavior Tree missions: the
+    simulator's bt_executor (identical copy) plus an extra-nodes scaffold
+    and CMake helpers, so missions can be created, compiled and tested
+    locally without the online simulator.
+  </description>
+
+  <maintainer email="maintainer@example.com">maintainer</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>behaviortree_cpp</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

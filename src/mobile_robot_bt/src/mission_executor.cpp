@@ -6,9 +6,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "mobile_robot_bt/ros_log.hpp"
 #include "mobile_robot_bt/create_pose.hpp"
-#include "mobile_robot_bt/navigate_to_pose.hpp"
-#include "mobile_robot_bt/find_free_space.hpp"
-#include "mobile_robot_bt/wait_for_robot_ready.hpp"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 #include "mobile_robot_bt/wait.hpp"
 

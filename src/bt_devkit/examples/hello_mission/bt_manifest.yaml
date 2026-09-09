@@ -1,0 +1,39 @@
+# bt_manifest.yaml — keep in sync with your nodes and trees from day 1.
+#
+# This project directory IS a bundle directory (same layout the platform
+# expects: manifest at root + behavior_trees/ + include/ + src/), so you can
+# run Gate 1 (bt_bundle_builder --validate-only, guide §7.2) on it directly.
+#
+# Registration rule: every node is registered exactly once (README,
+# "Node registration: one node, one place").
+#   - Flow B (project nodes, e.g. GreetNode): declared below, self-contained.
+#   - Flow A (devkit extra nodes, e.g. ExampleNode): registered by bt_devkit;
+#     they must be vendored into the bundle for the platform — the phase-2
+#     converter does this; until then keep such entries commented out.
+
+version: 1
+
+tree:
+  main: behavior_trees/main.xml
+
+plugin:
+  name: hello_mission_nodes
+
+dependencies:
+  - rclcpp
+  - behaviortree_cpp
+  # - nav2_msgs  # add when you vendor navigation nodes (Flow B)
+
+nodes:
+  - id: GreetNode
+    class: hello_mission::GreetNode
+    header: greet_node.hpp
+
+  # Flow A example (lives in bt_devkit, not in this project):
+  # - id: ExampleNode
+  #   class: bt_devkit::ExampleNode
+  #   header: example_node.hpp
+
+# monitoring:
+#   actions:
+#     - navigate_to_pose  # enable when the mission navigates

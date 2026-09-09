@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<root BTCPP_format="4" main_tree_to_execute="HelloTree">
+  <BehaviorTree ID="HelloTree">
+    <!--
+      Logic-only tree: runs locally without Nav2/Gazebo.
+      Used to verify the full local loop (build -> run -> exit code 0).
+    -->
+    <Sequence name="HelloTree">
+      <GreetNode who="world"/>
+
+      <ExampleNode message="devkit skeleton node"/>
+
+      <Repeat num_cycles="3">
+        <GreetNode who="tick"/>
+      </Repeat>
+    </Sequence>
+  </BehaviorTree>
+</root>
