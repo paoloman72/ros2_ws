@@ -1,6 +1,6 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.substitutions import Command
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.substitutions import Command, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch_ros.actions import Node
@@ -26,7 +26,7 @@ def generate_launch_description():
             '/launch/gz_sim.launch.py'
         ]),
         launch_arguments={
-            'gz_args': ['-r ', str(world_file)]
+            'gz_args': LaunchConfiguration('gz_args')
         }.items()
     )
 
@@ -58,7 +58,7 @@ def generate_launch_description():
             '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
             '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-            '/clock@gz.msgs.Clock[rosgraph_msgs/msg/Clock',
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
         ],
@@ -81,6 +81,14 @@ def generate_launch_description():
         output='screen'
     )
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'gz_args',
+            default_value='-r ' + str(world_file),
+            description=(
+                'Arguments passed to gz sim. For headless (no display, e.g. '
+                'in docker) use: gz_args:="-s -r <world file>"'
+            ),
+        ),
         gazebo,
         robot_state_publisher,
         spawn_robot,

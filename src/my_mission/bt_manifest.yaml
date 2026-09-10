@@ -22,18 +22,37 @@ plugin:
 dependencies:
   - rclcpp
   - behaviortree_cpp
-  # - nav2_msgs  # add when you vendor navigation nodes (Flow B)
+  - rclcpp_action
+  - nav2_msgs
+  - geometry_msgs
+  - sensor_msgs
+  - tf2_ros
+  - tf2_geometry_msgs
 
 nodes:
   - id: GreetNode
     class: my_mission::GreetNode
     header: greet_node.hpp
 
+  # Vendored navigation nodes (Flow B; class names as in the
+  # reference bundle, headers flat under include/).
+  - id: CreatePose
+    class: mobile_robot_bt::CreatePose
+    header: create_pose.hpp
+
+  - id: NavigateToPose
+    class: mobile_robot_bt::NavigateToPose
+    header: navigate_to_pose.hpp
+
+  - id: WaitForRobotReady
+    class: mobile_robot_bt::WaitForRobotReady
+    header: wait_for_robot_ready.hpp
+
   # Flow A example (lives in bt_devkit, not in this project):
   # - id: ExampleNode
   #   class: bt_devkit::ExampleNode
   #   header: example_node.hpp
 
-# monitoring:
-#   actions:
-#     - navigate_to_pose  # enable when the mission navigates
+monitoring:
+  actions:
+    - navigate_to_pose  # the mission navigates

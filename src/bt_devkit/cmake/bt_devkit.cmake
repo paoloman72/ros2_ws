@@ -8,6 +8,7 @@
 #   bt_devkit_add_mission(my_mission_nodes
 #     SOURCES src/my_node.cpp src/register_nodes.cpp
 #     TREES   behavior_trees/main.xml behavior_trees/variants/other.xml
+#     [DEPENDS rclcpp_action nav2_msgs ...]  # optional extra link deps
 #   )
 #
 # This creates a single SHARED plugin library containing your custom nodes
@@ -22,7 +23,7 @@
 # for the registration symbol that bt_executor dlopen()s.
 
 function(bt_devkit_add_mission target)
-  cmake_parse_arguments(M "" "" "SOURCES;TREES" ${ARGN})
+  cmake_parse_arguments(M "" "" "SOURCES;TREES;DEPENDS" ${ARGN})
 
   if(NOT M_SOURCES)
     message(FATAL_ERROR "bt_devkit_add_mission(${target}): SOURCES is required")
@@ -58,9 +59,16 @@ function(bt_devkit_add_mission target)
   )
   # Platform plugin contract: export the registration entry point.
   target_compile_definitions(${target} PRIVATE BT_PLUGIN_EXPORT)
+  # Extra DEPENDS (e.g. rclcpp_action, nav2_msgs) are linked the same way
+  # the platform does from the manifest dependencies; keep them in sync with
+  # your package.xml and bt_manifest.yaml.
+  foreach(dep IN LISTS M_DEPENDS)
+    find_package(${dep} REQUIRED)
+  endforeach()
   ament_target_dependencies(${target}
     rclcpp
     behaviortree_cpp
+    ${M_DEPENDS}
   )
 
   install(TARGETS ${target} DESTINATION lib/${PROJECT_NAME})

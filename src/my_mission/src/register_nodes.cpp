@@ -1,7 +1,10 @@
 #include "behaviortree_cpp/bt_factory.h"
 
 #include "bt_devkit/extra_nodes/register_extra_nodes.hpp"
+#include "create_pose.hpp"
 #include "greet_node.hpp"
+#include "navigate_to_pose.hpp"
+#include "wait_for_robot_ready.hpp"
 
 // This file produces the plugin entry point (createPlugin) that
 // bt_executor loads. Keep it a SINGLE file: the executor loads exactly
@@ -13,4 +16,10 @@ BT_REGISTER_NODES(factory)
 
   // Your custom nodes.
   factory.registerNodeType<my_mission::GreetNode>("GreetNode");
+
+  // Vendored navigation nodes (Flow B; class names as in the
+  // reference bundle).
+  factory.registerNodeType<mobile_robot_bt::CreatePose>("CreatePose");
+  factory.registerNodeType<mobile_robot_bt::NavigateToPose>("NavigateToPose");
+  factory.registerNodeType<mobile_robot_bt::WaitForRobotReady>("WaitForRobotReady");
 }

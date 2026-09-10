@@ -20,9 +20,20 @@ bt_devkit_add_mission(my_mission_nodes
   SOURCES
     src/greet_node.cpp
     src/register_nodes.cpp
+    # Vendored navigation nodes (Flow B, from the reference bundle).
+    src/create_pose.cpp
+    src/navigate_to_pose.cpp
+    src/wait_for_robot_ready.cpp
   TREES
     behavior_trees/hello.xml
     behavior_trees/main.xml
+  DEPENDS
+    rclcpp_action
+    nav2_msgs
+    geometry_msgs
+    sensor_msgs
+    tf2_ros
+    tf2_geometry_msgs
 )
 
 ament_package()
