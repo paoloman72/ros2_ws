@@ -74,6 +74,7 @@ install(FILES
 )
 install(PROGRAMS
   scripts/check_executor_sync.sh
+  scripts/bt_make_bundle.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

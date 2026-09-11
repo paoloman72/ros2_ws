@@ -60,8 +60,9 @@ function(bt_devkit_add_mission target)
   # Platform plugin contract: export the registration entry point.
   target_compile_definitions(${target} PRIVATE BT_PLUGIN_EXPORT)
   # Extra DEPENDS (e.g. rclcpp_action, nav2_msgs) are linked the same way
-  # the platform does from the manifest dependencies; keep them in sync with
-  # your package.xml and bt_manifest.yaml.
+  # the platform does from the manifest dependencies, which
+  # bt_make_bundle.py generates from your package.xml: keep DEPENDS in sync
+  # with package.xml.
   foreach(dep IN LISTS M_DEPENDS)
     find_package(${dep} REQUIRED)
   endforeach()
