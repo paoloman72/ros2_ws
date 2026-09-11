@@ -5,6 +5,9 @@ Local development kit for IPCEI custom Behavior Tree missions.
 It lets you create, compile and test your own BT missions **locally, without
 the online simulator**, using exactly the same executor the platform runs.
 
+> **Quick start:** `QUICKSTART.md` — the compact 3-step flow
+> (create → test locally → bundle). This README is the full reference.
+
 ## What it contains
 
 | Component | Notes |
@@ -139,8 +142,9 @@ Exit codes (identical to the platform): `0` SUCCESS, `1` FAILURE,
 
 ### Trees that need the robot (Nav2)
 
-1. Bring up the world + Nav2 — the `mobile_robot` package of this
-   workspace (headless container → server-only Gazebo):
+1. Bring up the world + Nav2 — any bringup that exposes `/scan`, TF, the
+   map and the `navigate_to_pose` action works. In this workspace use the
+   `mobile_robot` package (headless container → server-only Gazebo):
 
        ros2 launch mobile_robot full_simulation.launch.py \
          gz_args:="-s -r $(ros2 pkg prefix mobile_robot)/share/mobile_robot/worlds/slam_world.world.sdf"
