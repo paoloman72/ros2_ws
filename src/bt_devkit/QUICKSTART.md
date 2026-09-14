@@ -36,6 +36,12 @@ Rules of thumb:
 - Navigation nodes (WaitForRobotReady, NavigateToPose, ...): copy the
   `include/`+`src/` pairs from `src/my_mission/` (Flow B), add them to
   `SOURCES`, and add their deps to **both** `DEPENDS` and `package.xml`.
+- A node that waits across ticks (a topic, an action) must be a
+  `StatefulActionNode` — a `SyncActionNode` that returns `RUNNING`
+  aborts the tree (exit code `2`).
+- A `Sequence` stops at the first failure: if work must continue after a
+  guarded loop (e.g. "wander until battery low, then go home"), wrap the
+  loop in `ForceSuccess`.
 - `bt_manifest.yaml` is **generated**, never hand-edited.
 
 ## 2. Test locally
