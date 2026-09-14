@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<root BTCPP_format="4" main_tree_to_execute="HelloTree">
+  <BehaviorTree ID="HelloTree">
+    <!--
+      Logic-only tree: runs locally without Nav2/Gazebo.
+      Exercises the mission nodes (PickRandomPose, BatteryCheck) plus the
+      devkit scaffold node. Without a /battery_state publisher the
+      BatteryCheck hits its 2 s timeout and assumes the battery is healthy.
+    -->
+    <Sequence name="HelloTree">
+      <ExampleNode message="wandering mission"/>
+
+      <Repeat num_cycles="3">
+        <Sequence>
+          <PickRandomPose
+            min_x="-1.0" max_x="1.0"
+            min_y="-1.0" max_y="1.0"
+            x="{x}" y="{y}"/>
+          <CreatePose
+            x="{x}" y="{y}" yaw="0.0"
+            frame_id="map"
+            pose="{p}"/>
+        </Sequence>
+      </Repeat>
+
+      <BatteryCheck
+        topic="battery_state"
+        threshold_percent="30"
+        low="false"
+        timeout_sec="2.0"
+        percent="{battery_percent}"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
