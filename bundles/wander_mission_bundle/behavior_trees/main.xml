@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <!--
+      Wandering mission with battery guard:
+      1. wait for the robot (scan + map->base TF),
+      2. wander to free targets verified by LiDAR (FindFreeSpace) until
+         BatteryCheck fails, i.e. the battery drops to/below
+         threshold_percent,
+      3. return to the spawn point (0, 0), where Gazebo places the robot.
+      If FindFreeSpace finds no candidate (robot boxed in) the loop stops
+      as well and the robot goes home. Finite: ends in SUCCESS (the
+      simulator stops the robot after a successful run). A failed
+      NavigateToPose also stops the loop and sends the robot home.
+      Requires the Gazebo world + Nav2 (Gate 3) and a BatteryState
+      publisher on /battery_state (battery_simulator).
+    -->
+    <Sequence name="MainTree">
+      <WaitForRobotReady
+        scan_topic="scan"
+        map_frame="map"
+        base_frame="base_link"
+        timeout="15.0"/>
+
+      <!--
+        ForceSuccess: the loop stops when the battery goes low (or a
+        navigation / goal search fails); the tree must still continue to
+        the return-to-spawn branch below instead of failing here.
+      -->
+      <ForceSuccess name="Wander loop">
+        <Repeat num_cycles="1000">
+          <Sequence>
+            <BatteryCheck
+              topic="battery_state"
+              threshold_percent="30"
+              low="false"
+              timeout_sec="10.0"
+              percent="{battery_percent}"/>
+            <!--
+              Picks the best free corridor visible on /scan (default:
+              2-4 m ahead, 0.4 m half-width, 0.5 m obstacle clearance)
+              and outputs a ready-to-go PoseStamped in the map frame.
+            -->
+            <FindFreeSpace
+              min_distance="1.5"
+              max_distance="3.0"
+              goal="{wander_goal}"/>
+            <NavigateToPose pose="{wander_goal}"/>
+          </Sequence>
+        </Repeat>
+      </ForceSuccess>
+
+      <Sequence name="Low battery - return to spawn">
+        <CreatePose
+          x="0.0" y="0.0" yaw="0.0"
+          frame_id="map"
+          pose="{spawn}"/>
+        <NavigateToPose pose="{spawn}"/>
+      </Sequence>
+    </Sequence>
+  </BehaviorTree>
+</root>

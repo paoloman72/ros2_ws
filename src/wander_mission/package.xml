@@ -4,9 +4,10 @@
   <name>wander_mission</name>
   <version>0.1.0</version>
   <description>
-    Wandering mission for bt_devkit: random waypoints while the battery is
-    healthy, return to spawn when it gets low. Ships a simulated battery
-    driver (battery_simulator) publishing /battery_state.
+    Wandering mission for bt_devkit: free targets verified by LiDAR
+    (FindFreeSpace) while the battery is healthy, return to spawn when it
+    gets low. Ships a simulated battery driver (battery_simulator)
+    publishing /battery_state.
   </description>
 
   <maintainer email="maintainer@example.com">maintainer</maintainer>
@@ -21,6 +22,7 @@
   <depend>geometry_msgs</depend>
   <depend>behaviortree_cpp</depend>
   <depend>sensor_msgs</depend>
+  <depend>lifecycle_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
 

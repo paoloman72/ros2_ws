@@ -35,6 +35,7 @@ bt_devkit_add_mission(wander_mission_nodes
     nav2_msgs
     geometry_msgs
     sensor_msgs
+    lifecycle_msgs
     tf2_ros
     tf2_geometry_msgs
 )
