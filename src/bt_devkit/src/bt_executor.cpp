@@ -145,19 +145,26 @@ public:
         status = tree_.tickOnce();
       } catch (const std::exception & error) {
         RCLCPP_ERROR(get_logger(), "Behavior Tree tick threw an exception: %s", error.what());
+        write_tick_progress("ERROR", true);
         halt_tree_noexcept();
         return 2;
       }
 
       executor.spin_some();
 
+      // Observed by bt_mission_launcher. Only the actual tick loop updates this
+      // counter: a blocked tick/callback must not look like a healthy executor.
+      ++completed_ticks_;
+
       if (status == BT::NodeStatus::SUCCESS) {
         RCLCPP_INFO(get_logger(), "Behavior Tree completed with SUCCESS");
         halt_tree_noexcept();
+        write_tick_progress("SUCCESS", true);
         return 0;
       }
       if (status == BT::NodeStatus::FAILURE) {
         RCLCPP_ERROR(get_logger(), "Behavior Tree completed with FAILURE");
+        write_tick_progress("FAILURE", true);
         halt_tree_noexcept();
         return 1;
       }
@@ -165,10 +172,12 @@ public:
         RCLCPP_ERROR(
           get_logger(), "Behavior Tree returned unexpected status code: %d",
           static_cast<int>(status));
+        write_tick_progress("ERROR", true);
         halt_tree_noexcept();
         return 3;
       }
 
+      write_tick_progress("RUNNING");
       std::this_thread::sleep_for(tick_period_);
     }
 
@@ -177,6 +186,36 @@ public:
   }
 
 private:
+  void write_tick_progress(const char * status, bool force = false)
+  {
+    // Keep the launcher CLI and every mission bundle unchanged. The existing
+    // per-run, per-robot ready path also identifies its progress sidecar.
+    if (ready_file_.empty()) {
+      return;
+    }
+    const auto now = std::chrono::steady_clock::now();
+    if (!force && tick_progress_written_ && now - last_tick_write_ < 1s) {
+      return;
+    }
+    const std::string path = ready_file_ + ".ticks";
+    const std::string temporary = path + ".tmp";
+    {
+      std::ofstream stream(temporary, std::ios::out | std::ios::trunc);
+      stream << completed_ticks_ << " " << status << "\n";
+      stream.flush();
+      if (!stream) {
+        throw std::runtime_error("Cannot write BT tick progress: " + temporary);
+      }
+    }
+    std::filesystem::rename(temporary, path);
+    last_tick_write_ = now;
+    tick_progress_written_ = true;
+  }
+
+  std::uint64_t completed_ticks_{0};
+  std::chrono::steady_clock::time_point last_tick_write_{};
+  bool tick_progress_written_{false};
+
   void halt_tree_noexcept() noexcept
   {
     try {
