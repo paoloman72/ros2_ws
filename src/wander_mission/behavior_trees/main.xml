@@ -31,11 +31,17 @@
       <ForceSuccess name="Wander loop">
         <Repeat num_cycles="1000">
           <Sequence>
-            <BatteryCheck
-              topic="battery_state"
+            <!--
+              Battery is simulated inside the tree (the Gazebo world has no
+              battery driver): it drains at drain_per_sec from initial_percent.
+              On hardware, swap this for <BatteryCheck> to read a real
+              /battery_state topic.
+            -->
+            <SimulatedBattery
+              initial_percent="100.0"
+              drain_per_sec="0.5"
               threshold_percent="30"
               low="false"
-              timeout_sec="10.0"
               percent="{battery_percent}"/>
             <!--
               Picks the best free corridor visible on /scan (default:

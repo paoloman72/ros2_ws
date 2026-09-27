@@ -6,6 +6,7 @@
 #include "find_free_space.hpp"
 #include "navigate_to_pose.hpp"
 #include "pick_random_pose.hpp"
+#include "simulated_battery.hpp"
 #include "wait_for_robot_ready.hpp"
 
 // This file produces the plugin entry point (createPlugin) that
@@ -19,6 +20,7 @@ BT_REGISTER_NODES(factory)
   // Your custom nodes.
   factory.registerNodeType<wander_mission::BatteryCheck>("BatteryCheck");
   factory.registerNodeType<wander_mission::PickRandomPose>("PickRandomPose");
+  factory.registerNodeType<wander_mission::SimulatedBattery>("SimulatedBattery");
 
   // Vendored navigation nodes (Flow B; class names as in the
   // reference bundle).

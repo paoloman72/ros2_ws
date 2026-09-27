@@ -20,6 +20,7 @@ include(${bt_devkit_DIR}/bt_devkit.cmake)
 bt_devkit_add_mission(wander_mission_nodes
   SOURCES
     src/battery_check.cpp
+    src/simulated_battery.cpp
     src/pick_random_pose.cpp
     src/register_nodes.cpp
     # Vendored navigation nodes (Flow B, from the reference bundle).
