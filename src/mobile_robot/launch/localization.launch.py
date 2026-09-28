@@ -3,7 +3,10 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -22,12 +25,21 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            "map",
+            default_value=os.path.join(pkg_share, "maps", "slam_world_map.yaml"),
+            description="Path to the map YAML file",
+        ),
         Node(
             package="nav2_map_server",
             executable="map_server",
             name="map_server",
             output="screen",
-            parameters=[params_file],
+            parameters=[params_file, {
+                "yaml_filename": ParameterValue(
+                    LaunchConfiguration("map"), value_type=str
+                ),
+            }],
         ),
 
         Node(
