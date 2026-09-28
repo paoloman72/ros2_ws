@@ -39,7 +39,7 @@
             -->
             <SimulatedBattery
               initial_percent="100.0"
-              drain_per_sec="0.5"
+              drain_per_sec="0.1"
               threshold_percent="30"
               low="false"
               percent="{battery_percent}"/>
