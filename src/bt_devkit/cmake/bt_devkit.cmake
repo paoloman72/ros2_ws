@@ -22,6 +22,16 @@
 # for rclcpp + behaviortree_cpp and the BT_PLUGIN_EXPORT compile definition
 # for the registration symbol that bt_executor dlopen()s.
 
+# Exporting requires executing the freshly built plugin on the build machine.
+if(CMAKE_CROSSCOMPILING)
+  set(_bt_devkit_export_default OFF)
+else()
+  set(_bt_devkit_export_default ON)
+endif()
+option(BT_DEVKIT_EXPORT_GROOT_MODELS
+  "Generate Groot2 node models from mission plugins during the build"
+  ${_bt_devkit_export_default})
+
 function(bt_devkit_add_mission target)
   cmake_parse_arguments(M "" "" "SOURCES;TREES;DEPENDS" ${ARGN})
 
@@ -73,6 +83,25 @@ function(bt_devkit_add_mission target)
   )
 
   install(TARGETS ${target} DESTINATION lib/${PROJECT_NAME})
+
+  if(BT_DEVKIT_EXPORT_GROOT_MODELS)
+    set(_exporter "${_bt_devkit_prefix}/lib/bt_devkit/bt_export_models")
+    if(NOT EXISTS "${_exporter}")
+      message(FATAL_ERROR
+        "bt_export_models is missing: rebuild/install bt_devkit first, "
+        "or configure with -DBT_DEVKIT_EXPORT_GROOT_MODELS=OFF")
+    endif()
+    set(_models "${CMAKE_CURRENT_BINARY_DIR}/groot/${target}/node_models.xml")
+    add_custom_command(
+      OUTPUT "${_models}"
+      COMMAND "${_exporter}" "$<TARGET_FILE:${target}>" "${_models}"
+      DEPENDS ${target} "${_exporter}"
+      COMMENT "Exporting Groot2 models for ${target}"
+      VERBATIM
+    )
+    add_custom_target(${target}_groot_models ALL DEPENDS "${_models}")
+    install(FILES "${_models}" DESTINATION share/${PROJECT_NAME}/groot)
+  endif()
 
   foreach(tree IN LISTS M_TREES)
     install(FILES ${tree} DESTINATION share/${PROJECT_NAME}/behavior_trees)

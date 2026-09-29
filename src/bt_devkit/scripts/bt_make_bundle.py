@@ -86,9 +86,27 @@ def parse_package_xml(path):
     return name_el.text.strip(), deps
 
 
+def executable_node_ids(root):
+    """Node registrations used in trees, excluding Groot's model metadata."""
+    trees = [root] if root.tag == "BehaviorTree" else root.findall("BehaviorTree")
+    if not trees:
+        raise ValueError("XML contains no BehaviorTree definitions")
+    ids = set()
+    for tree in trees:
+        for el in tree.iter():
+            if el is tree:
+                continue
+            # Groot can use either <MyNode/> or <Action ID="MyNode"/>.
+            # SubTree's ID names a tree, not a node registration.
+            if el.tag in ("Action", "Condition", "Control", "Decorator"):
+                ids.add(el.attrib.get("ID", el.tag))
+            else:
+                ids.add(el.tag)
+    return ids
+
+
 def parse_tree_tags(path):
-    root = ET.parse(path).getroot()
-    return {el.tag for el in root.iter() if el.tag not in ("root", "BehaviorTree")}
+    return executable_node_ids(ET.parse(path).getroot())
 
 
 def resolve_headers(nodes, include_dir):
@@ -130,7 +148,7 @@ def build_deps(pkg_deps):
 
 def derive_monitoring(tree_text):
     actions = []
-    if re.search(r"<NavigateToPose\b", tree_text):
+    if "NavigateToPose" in executable_node_ids(ET.fromstring(tree_text)):
         actions.append("navigate_to_pose")
     return actions
 

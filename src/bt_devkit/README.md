@@ -188,6 +188,16 @@ Use `tree:=other.xml` (or an absolute XML path) and
 `plugin:=/absolute/path/library.so` for overrides. The plugin target must follow
 the default naming convention or be supplied explicitly.
 
+### Custom node models for Groot2
+
+Mission builds automatically export their custom node models, including
+registered devkit extra nodes, to `share/<mission>/groot/node_models.xml`.
+Import that file using Groot2's **Import Models**. Ports and defaults come
+from the compiled plugin, without changing the executor or running Gazebo.
+See [GROOT_MODELS.md](GROOT_MODELS.md) for build/import commands and checks,
+and the node catalogs in [my_mission](../my_mission/README.md) and
+[wander_mission](../wander_mission/README.md).
+
 ### Groot monitoring
 
 Groot is off by default. Add `groot:=true port:=1669` to monitor robot1,
