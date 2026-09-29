@@ -3,6 +3,9 @@
 <robot name="mobile_robot"
        xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <xacro:arg name="robot_name" default="mobile_robot"/>
+  <xacro:arg name="topic_prefix" default=""/>
+
   <!-- ========================= -->
   <!-- Properties                -->
   <!-- ========================= -->
@@ -285,9 +288,9 @@
       <wheel_separation>${2.0 * wheel_y}</wheel_separation>
       <wheel_radius>${wheel_radius}</wheel_radius>
 
-      <topic>/cmd_vel</topic>
-      <odom_topic>/odom</odom_topic>
-      <tf_topic>/tf</tf_topic>
+      <topic>$(arg topic_prefix)/cmd_vel</topic>
+      <odom_topic>$(arg topic_prefix)/odom</odom_topic>
+      <tf_topic>$(arg topic_prefix)/tf</tf_topic>
 
       <frame_id>odom</frame_id>
       <child_frame_id>base_link</child_frame_id>
@@ -303,10 +306,11 @@
 
   <gazebo reference="lidar_link">
     <sensor name="lidar_sensor" type="gpu_lidar">
+      <gz_frame_id>$(arg robot_name)/base_link/lidar_sensor</gz_frame_id>
       <pose>0 0 0 0 0 0</pose>
       <always_on>true</always_on>
       <update_rate>10</update_rate>
-      <topic>/scan</topic>
+      <topic>$(arg topic_prefix)/scan</topic>
       <visualize>true</visualize>
 
       <ray>
@@ -358,7 +362,7 @@
       <pose>0 0 0 0 0 0</pose>
       <always_on>true</always_on>
       <update_rate>50</update_rate>
-      <topic>/imu</topic>
+      <topic>$(arg topic_prefix)/imu</topic>
     </sensor>
   </gazebo>
   
