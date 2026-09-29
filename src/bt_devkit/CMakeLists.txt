@@ -52,7 +52,11 @@ ament_target_dependencies(bt_extra_nodes
   behaviortree_cpp
 )
 
+add_executable(bt_export_models src/bt_export_models.cpp)
+ament_target_dependencies(bt_export_models behaviortree_cpp)
+
 install(TARGETS
+  bt_export_models
   bt_executor
   bt_extra_nodes
   DESTINATION lib/${PROJECT_NAME}
@@ -79,6 +83,6 @@ install(PROGRAMS
 )
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
-install(FILES MISSION_LAUNCH.md DESTINATION share/${PROJECT_NAME})
+install(FILES MISSION_LAUNCH.md GROOT_MODELS.md DESTINATION share/${PROJECT_NAME})
 
 ament_package()
