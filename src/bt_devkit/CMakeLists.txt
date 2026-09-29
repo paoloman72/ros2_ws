@@ -78,4 +78,7 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+install(FILES MISSION_LAUNCH.md DESTINATION share/${PROJECT_NAME})
+
 ament_package()
