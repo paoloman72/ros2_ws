@@ -13,6 +13,7 @@ the online simulator**, using exactly the same executor the platform runs.
 | Component | Notes |
 |---|---|
 | `bt_executor` | **Identical copy** of the simulator's executor (`bt_runtime_tools/src/bt_executor.cpp`). Same parameters, same exit codes, same blackboard `node` contract. Verify with `scripts/check_executor_sync.sh`. |
+| `launch/mission.launch.py` | Short local command: resolves mission resources, applies robot namespace/remaps and optionally enables Groot. See [MISSION_LAUNCH.md](MISSION_LAUNCH.md). |
 | `bt_extra_nodes` (static lib) | The *structure* for extra nodes: one stateful `ExampleNode` skeleton (ports + blackboard `node` + onStart/onRunning/onHalted) and `register_extra_nodes()`, where you add your reusable nodes. |
 | `cmake/bt_devkit.cmake` | `bt_devkit_add_mission()` helper: builds your single plugin `.so` (your nodes + extra nodes) and installs your trees. |
 | `scripts/bt_make_bundle.py` | Generates `bt_manifest.yaml` + the bundle ZIP from your project: nodes from `register_nodes.cpp`, deps from `package.xml`, tree from `behavior_trees/`; vendors Flow A nodes on request (`--vendor`). |
@@ -122,39 +123,115 @@ validates.
 
 ## Step 2 — Test locally
 
-### Build
+### Container and workspace
 
-    colcon build --packages-select bt_devkit my_new_mission
-    source install/setup.bash
+Run ROS commands inside the Jazzy container. If `run_gazebo.sh` has already
+started the `ros2_gz` container, open another terminal **on the host**:
 
-### Run with the same executor the simulator uses
+```bash
+docker exec -it ros2_gz bash
+```
 
-(no ready/start files → starts immediately)
+Then **inside the container**:
 
-    ros2 run bt_devkit bt_executor --ros-args \
-      -p bt_xml:=$(ros2 pkg prefix my_new_mission)/share/my_new_mission/behavior_trees/main.xml \
-      -p plugin_library:=$(ros2 pkg prefix my_new_mission)/lib/my_new_mission/libmy_new_mission_nodes.so \
-      -p groot_enabled:=true -p groot_port:=1669
+```bash
+source /opt/ros/jazzy/setup.bash
+cd /ros2_ws
+source install/setup.bash
+```
 
-Watch the tree live in Groot2 at `http://127.0.0.1:1669`.
-Exit codes (identical to the platform): `0` SUCCESS, `1` FAILURE,
-`2` init error, `3` unexpected status.
+The container must be running. Do not start a second simulator to open a shell.
+After changing branches or installing this launch for the first time, build
+before running missions (replace `my_new_mission` with your mission package):
 
-### Trees that need the robot (Nav2)
+```bash
+colcon build --packages-select bt_devkit my_new_mission --symlink-install
+source install/setup.bash
+```
 
-1. Bring up the world + Nav2 — any bringup that exposes `/scan`, TF, the
-   map and the `navigate_to_pose` action works. In this workspace use the
-   `mobile_robot` package (headless container → server-only Gazebo):
+If the workspace has not been built yet, omit the first `source install/setup.bash`
+until after the build. Use the same ROS domain as the simulation; a custom
+`ROS_DOMAIN_ID` configured only in another shell must also be set in this shell.
 
-       ros2 launch mobile_robot full_simulation.launch.py \
-         gz_args:="-s -r $(ros2 pkg prefix mobile_robot)/share/mobile_robot/worlds/slam_world.world.sdf"
+### Run a mission with the unchanged executor
 
-2. Run the executor with `-p use_sim_time:=true` added — the world
-   provides `/clock` and Nav2/AMCL tick on sim time.
-3. Namespace: the local sim runs in the root namespace (`/scan`,
-   `/navigate_to_pose`), so do NOT pass `-r __ns:=/pluto` locally. On the
-   platform the executor is launched with the robot's namespace remaps
-   (guide §7.4).
+`mission.launch.py` configures the existing executable; it does not modify
+`bt_executor.cpp`, the plugin ABI or the simulator bundle.
+
+Quick check without a robot, using an installed non-navigation tree:
+
+```bash
+ros2 launch bt_devkit mission.launch.py mission:=my_new_mission tree:=hello.xml use_sim_time:=false
+```
+
+With Gazebo and Nav2 already active in the root namespace:
+
+```bash
+ros2 launch bt_devkit mission.launch.py mission:=my_new_mission
+```
+
+For a simulation started with `namespace:=robot1`:
+
+```bash
+ros2 launch bt_devkit mission.launch.py mission:=my_new_mission robot:=robot1
+```
+
+Omit `robot` for root; do not pass an empty `robot:=` argument.
+The launch applies namespace and process-wide TF/scan remaps, including internal
+plugin listeners. Relative action names such as `navigate_to_pose` select the
+robot automatically. Frame IDs remain `map`, `odom`, `base_link`.
+Simulation time defaults to true.
+
+The default tree is `share/<mission>/behavior_trees/main.xml`; the default
+plugin is `lib/<mission>/lib<mission>_nodes.so` under the package prefix.
+Use `tree:=other.xml` (or an absolute XML path) and
+`plugin:=/absolute/path/library.so` for overrides. The plugin target must follow
+the default naming convention or be supplied explicitly.
+
+### Groot monitoring
+
+Groot is off by default. Add `groot:=true port:=1669` to monitor robot1,
+or `groot:=true port:=1673` for robot2, provided both ports of each pair are free.
+With the multirobot `run_gazebo.sh` configuration:
+
+| Process | TCP ports |
+|---|---|
+| Nav2 robot1 | 1667–1668 |
+| BT executor robot1 | 1669–1670 |
+| Nav2 robot2 | 1671–1672 |
+| BT executor robot2 | 1673–1674 |
+
+Set the first port of the selected executor pair in the Groot2 connection dialog.
+Use `127.0.0.1` only when Groot runs on the same host/network as the container.
+If Groot runs outside VirtualBox, use a reachable VM address and configure the
+VM network accordingly. This is a Groot connection, not an HTTP web page.
+Check listeners with `ss -ltnp` on the Docker host; a bind error and a client
+connection timeout are different failures.
+
+### Simulation prerequisites
+
+Start Gazebo/Nav2 once, or reuse the simulation already running via
+`run_gazebo.sh`. For a root-namespace GUI simulation:
+
+```bash
+ros2 launch mobile_robot full_simulation.launch.py
+```
+
+For a named robot add `namespace:=robot1`, then match it with `robot:=robot1`
+in the mission launch. In a server-only setup, use `use_rviz:=false` and the
+existing `gz_args` override; GPU LiDAR still needs a working rendering backend.
+
+Run only one mission controller per robot and avoid concurrent manual goals.
+The existing wander mission returns to (0,0): assign distinct return targets
+before running two copies concurrently.
+
+See [MISSION_LAUNCH.md](MISSION_LAUNCH.md) for all launch options and container
+commands, and [MULTIROBOT.md](../mobile_robot/MULTIROBOT.md) for simulation setup.
+
+Direct `ros2 run bt_devkit bt_executor --ros-args ...` remains supported.
+The executable's exit codes remain `0` SUCCESS, `1` FAILURE, `2` init/tick
+error, `3` unexpected status (interruption: `130`). Do not assume that the
+surrounding `ros2 launch` process returns the same exit code.
 
 ---
 

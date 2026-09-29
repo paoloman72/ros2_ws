@@ -69,22 +69,36 @@ Nav2/robot sui topic radice `/cmd_vel`, `/scan`, `/odom`, `/tf`, `/tf_static`.
 I frame interni restano `map`, `odom`, `base_link`: non aggiungere il namespace
 ai frame dei goal. Buffer TF diversi non devono unire flussi con frame omonimi.
 
-Esempio di avvio della missione esistente (dopo la build di bt_devkit/wander_mission):
+Per avviare la missione nello stesso container, aprire un secondo terminale
+**sull'host**:
 
 ```bash
-ros2 run bt_devkit bt_executor --ros-args \
-  -r __ns:=/robot1 \
-  -r /tf:=/robot1/tf -r /tf_static:=/robot1/tf_static \
-  -r /scan:=/robot1/scan \
-  -p use_sim_time:=true \
-  -p bt_xml:="$(ros2 pkg prefix wander_mission)/share/wander_mission/behavior_trees/main.xml" \
-  -p plugin_library:="$(ros2 pkg prefix wander_mission)/lib/wander_mission/libwander_mission_nodes.so"
+docker exec -it ros2_gz bash
 ```
 
-I remapping TF sono globali al processo, così valgono anche per i listener
-interni ai plugin. L'action relativa `navigate_to_pose` risolve automaticamente
-il namespace. I plugin con altri nomi assoluti richiedono remapping espliciti.
-Per nodi in altri container/macchine verificare anche la comunicazione DDS.
+Poi **nel container**, dopo aver installato il nuovo launch di bt_devkit:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+cd /ros2_ws
+colcon build --packages-select bt_devkit wander_mission --symlink-install
+source install/setup.bash
+ros2 launch bt_devkit mission.launch.py mission:=wander_mission robot:=robot1
+```
+
+La build serve dopo le modifiche; nei terminali successivi basta caricare i setup.
+Omettere `robot` per la simulazione root. Per Groot aggiungere
+`groot:=true port:=1669`; per il secondo executor scegliere una coppia libera,
+ad esempio `port:=1673`. Groot è disabilitato per default.
+
+Il launch configura namespace, percorsi e remapping TF/scan senza modificare
+`bt_executor`. L'action relativa `navigate_to_pose` risolve automaticamente il
+namespace. Ulteriori nomi assoluti nei plugin richiedono remapping espliciti.
+La missione wander mantiene il ritorno a (0,0): modificarlo prima dell'uso
+simultaneo di più istanze. Per nodi in altri container/macchine verificare DDS.
+
+Vedere [MISSION_LAUNCH.md](../bt_devkit/MISSION_LAUNCH.md) per opzioni e diagnostica
+delle porte. Il comando diretto `ros2 run bt_devkit bt_executor` resta disponibile.
 
 ## Organizzazione dei launch
 
@@ -113,7 +127,7 @@ Ogni robot ha map server, AMCL e Nav2 indipendenti, con la stessa mappa salvata.
 Esempio di suddivisione porte sullo stesso host: Nav2 robot1 `1667` (e `1668`),
 executor robot1 `1669` (e `1670`), Nav2 robot2 `1671` (e `1672`), executor robot2
 `1673` (e `1674`). Le porte si assegnano con `nav_groot_port` e con l'esistente
-parametro `groot_port` dell'executor. Rendere univoci anche gli eventuali
+argomento `port` di `mission.launch.py` (che imposta `groot_port` nell'executor). Rendere univoci anche gli eventuali
 `ready_file` per robot/esecuzione; usare barriere `start_file` intenzionalmente
 condivise o separate e pulire file di esecuzioni precedenti.
 
