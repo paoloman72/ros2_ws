@@ -32,6 +32,9 @@ option(BT_DEVKIT_EXPORT_GROOT_MODELS
   "Generate Groot2 node models from mission plugins during the build"
   ${_bt_devkit_export_default})
 
+option(BT_DEVKIT_COPY_GROOT_MODELS_TO_SOURCE
+  "Copy generated Groot2 models into the mission source directory" ON)
+
 function(bt_devkit_add_mission target)
   cmake_parse_arguments(M "" "" "SOURCES;TREES;DEPENDS" ${ARGN})
 
@@ -101,6 +104,20 @@ function(bt_devkit_add_mission target)
     )
     add_custom_target(${target}_groot_models ALL DEPENDS "${_models}")
     install(FILES "${_models}" DESTINATION share/${PROJECT_NAME}/groot)
+
+    if(BT_DEVKIT_COPY_GROOT_MODELS_TO_SOURCE)
+      # Run the cheap copy check on every build, also restoring a deleted copy.
+      # Keep this a regular file: install symlinks may point inside a container.
+      add_custom_target(${target}_groot_source_copy ALL
+        COMMAND "${CMAKE_COMMAND}" -E make_directory
+          "${CMAKE_CURRENT_SOURCE_DIR}/groot"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+          "${_models}" "${CMAKE_CURRENT_SOURCE_DIR}/groot/node_models.xml"
+        COMMENT "Copying Groot2 models into ${PROJECT_NAME}/groot"
+        VERBATIM
+      )
+      add_dependencies(${target}_groot_source_copy ${target}_groot_models)
+    endif()
   endif()
 
   foreach(tree IN LISTS M_TREES)

@@ -191,7 +191,8 @@ the default naming convention or be supplied explicitly.
 ### Custom node models for Groot2
 
 Mission builds automatically export their custom node models, including
-registered devkit extra nodes, to `share/<mission>/groot/node_models.xml`.
+registered devkit extra nodes, to `src/<mission>/groot/node_models.xml`
+(a regular file beside `behavior_trees/`, also installed under the package prefix).
 Import that file using Groot2's **Import Models**. Ports and defaults come
 from the compiled plugin, without changing the executor or running Gazebo.
 See [GROOT_MODELS.md](GROOT_MODELS.md) for build/import commands and checks,
