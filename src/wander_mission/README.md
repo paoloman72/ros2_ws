@@ -6,9 +6,11 @@ For execution and robot namespaces, see
 
 ## Extra nodes for Groot2
 
-The build automatically generates and installs
-`share/wander_mission/groot/node_models.xml` under the package prefix.
-Use Groot2's **Import Models** to load this catalog before editing the tree.
+The build automatically creates `groot/node_models.xml` in this mission
+folder, alongside `behavior_trees/`. This is a regular file, readable from
+the host even when the build runs inside Docker. Use Groot2's **Import Models**
+to load it before editing the tree. A copy is also installed under the package
+prefix for ROS tooling.
 
 | Registered node | Purpose |
 |---|---|
@@ -26,4 +28,4 @@ there is no second XML definition to maintain. Rebuild and reimport after
 changing ports or registrations.
 
 See [GROOT_MODELS.md](../bt_devkit/GROOT_MODELS.md) for container commands,
-host-accessible copies, manual export and verification.
+manual export and verification.

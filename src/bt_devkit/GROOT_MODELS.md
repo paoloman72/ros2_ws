@@ -1,7 +1,9 @@
 # Custom nodes in Groot2
 
 Every mission built with `bt_devkit_add_mission()` exports its registered
-custom nodes to `share/<mission>/groot/node_models.xml`. This includes the
+custom nodes to `groot/node_models.xml` in the mission source folder, beside
+`behavior_trees/`. The build also installs a copy under
+`share/<mission>/groot/node_models.xml` for ROS tooling. This includes the
 devkit extra nodes registered by the plugin, even if the current tree does
 not use them. Built-in BehaviorTree.CPP nodes are excluded.
 
@@ -14,28 +16,32 @@ source /opt/ros/jazzy/setup.bash
 cd /ros2_ws
 colcon build --packages-select bt_devkit my_mission wander_mission --symlink-install
 source install/setup.bash
-ls "$(ros2 pkg prefix my_mission)/share/my_mission/groot/node_models.xml"
-ls "$(ros2 pkg prefix wander_mission)/share/wander_mission/groot/node_models.xml"
+ls src/my_mission/groot/node_models.xml
+ls src/wander_mission/groot/node_models.xml
 ```
 
 In Groot2, use **Import Models** and select the XML for the mission being
 edited, then open its `behavior_trees/main.xml`. Import one mission's catalog
 per project: the two plugins share several registration IDs.
 
-If Groot2 runs on the Docker host, copy the generated files to the mounted
-workspace from inside the container. This also dereferences symlinks whose
-container paths may be inaccessible on the host:
+With the usual `~/ros2_ws:/ros2_ws` Docker mount, open these files directly
+from Groot2 on the host:
 
-```bash
-mkdir -p /ros2_ws/groot_models
-cp -L "$(ros2 pkg prefix my_mission)/share/my_mission/groot/node_models.xml" /ros2_ws/groot_models/my_mission.xml
-cp -L "$(ros2 pkg prefix wander_mission)/share/wander_mission/groot/node_models.xml" /ros2_ws/groot_models/wander_mission.xml
-```
+- `~/ros2_ws/src/my_mission/groot/node_models.xml`
+- `~/ros2_ws/src/wander_mission/groot/node_models.xml`
 
-With the usual `~/ros2_ws:/ros2_ws` mount, import
-`~/ros2_ws/groot_models/my_mission.xml` or `wander_mission.xml` on the host.
-Repeat the copy and import after changing node registrations or ports.
-These are generated artifacts; do not maintain or commit them by hand.
+Inside the container the same files are under `/ros2_ws/src/`.
+No manual copy is needed. These are regular files, not install symlinks.
+The build refreshes them when the exported content changes and restores a
+deleted source copy on the next build. Reimport in Groot2 after a change.
+
+The catalogs are generated and ignored by Git; do not edit them by hand.
+The `groot/.gitignore` file is hidden on Linux because its name starts with a
+dot; `node_models.xml` is not hidden. An icon marked with an X in a file manager
+can indicate a broken symlink: `--symlink-install` may create links to absolute
+paths inside the container that do not exist on the host. The source copies
+avoid that issue. Inspect `ls -l <path>` to distinguish a link from a regular
+file; an X icon alone is not enough to diagnose it.
 
 ## How generation works
 
@@ -47,7 +53,7 @@ come from the plugin's manifests and `providedPorts()`.
 It does not construct a tree, tick nodes, or initialize ROS.
 Registration callbacks must therefore remain usable without a ROS node.
 
-The build target depends on the plugin and exporter: changing a port and
+The export target depends on the plugin and exporter: changing a port and
 rebuilding regenerates the catalog. Deleting the generated build XML also
 regenerates it on the next normal build. Export failures fail the build
 instead of silently installing a stale catalog. One plugin per mission
@@ -60,6 +66,21 @@ must be available in the sourced Jazzy environment.
 
 Port type metadata does not implement live JSON serialization of custom
 blackboard values such as `geometry_msgs::msg::PoseStamped`.
+
+## Read-only source directories
+
+Copying into the mission folder is enabled by default and requires a writable
+source tree. To keep only the build/install artifacts (for example in CI):
+
+```bash
+colcon build --packages-select my_mission wander_mission \
+  --cmake-args -DBT_DEVKIT_COPY_GROOT_MODELS_TO_SOURCE=OFF
+```
+
+Re-enable with `-DBT_DEVKIT_COPY_GROOT_MODELS_TO_SOURCE=ON`. Both CMake options
+are cached. Disabling copying/export does not delete existing source copies;
+they may be stale. New missions should ignore `groot/node_models.xml` in Git,
+as the two example missions already do.
 
 ## Manual export and cross-compilation
 
