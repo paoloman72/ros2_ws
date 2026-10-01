@@ -3,6 +3,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <random>
 #include <string>
 #include <utility>
 
@@ -37,7 +38,7 @@ private:
   BT::NodeStatus tryCreateGoal();
 
   std::optional<std::pair<double, double>> findCandidate(
-    const LaserScan & scan) const;
+    const LaserScan & scan);
 
   std::optional<geometry_msgs::msg::PoseStamped> createGoal(
     double angle,
@@ -53,6 +54,8 @@ private:
 
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+
+  std::mt19937 random_engine_{std::random_device{}()};
 
   std::mutex scan_mutex_;
   LaserScan::SharedPtr latest_scan_;
