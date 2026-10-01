@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <limits>
+#include <vector>
 
 namespace mobile_robot_bt
 {
@@ -50,7 +51,7 @@ bool FindFreeSpace::validRange(
 }
 
 std::optional<std::pair<double, double>>
-FindFreeSpace::findCandidate(const LaserScan & scan) const
+FindFreeSpace::findCandidate(const LaserScan & scan)
 {
   const double min_distance =
     getInput<double>("min_distance").value();
@@ -67,6 +68,14 @@ FindFreeSpace::findCandidate(const LaserScan & scan) const
   const double obstacle_clearance =
     getInput<double>("obstacle_clearance").value();
 
+  const double random_score_margin =
+    getInput<double>("random_score_margin").value();
+  if (!std::isfinite(random_score_margin) || random_score_margin < 0.0) {
+    throw std::runtime_error(
+      "FindFreeSpace: random_score_margin must be finite and non-negative");
+  }
+
+  std::vector<std::pair<double, double>> candidates;
   std::optional<std::pair<double, double>> best_candidate;
   double best_score = -std::numeric_limits<double>::infinity();
 
@@ -145,10 +154,27 @@ FindFreeSpace::findCandidate(const LaserScan & scan) const
           std::make_pair(center_angle, candidate_distance);
       }
 
+      if (random_score_margin > 0.0) {
+        candidates.emplace_back(center_angle, candidate_distance);
+      }
+
       // Per questa direzione abbiamo già trovato
       // la massima distanza valida.
       break;
     }
+  }
+
+  if (random_score_margin > 0.0 && best_candidate) {
+    // Randomize only among already validated corridors near the best score.
+    candidates.erase(
+      std::remove_if(candidates.begin(), candidates.end(),
+        [best_score, random_score_margin](const auto & candidate) {
+          const double score = candidate.second - 0.5 * std::abs(candidate.first);
+          return best_score - score > random_score_margin;
+        }),
+      candidates.end());
+    std::uniform_int_distribution<std::size_t> choose(0, candidates.size() - 1);
+    return candidates[choose(random_engine_)];
   }
 
   return best_candidate;
@@ -264,6 +290,11 @@ BT::PortsList FindFreeSpace::providedPorts()
       "obstacle_clearance",
       0.50,
       "Clearance from obstacles in meters"),
+
+    BT::InputPort<double>(
+      "random_score_margin",
+      0.0,
+      "Allowed score loss for random selection; 0 keeps deterministic selection"),
 
     BT::InputPort<std::string>(
       "map_frame",

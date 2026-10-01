@@ -44,13 +44,14 @@
               low="false"
               percent="{battery_percent}"/>
             <!--
-              Picks the best free corridor visible on /scan (default:
+              Picks a near-best free corridor visible on /scan (node defaults:
               2-4 m ahead, 0.4 m half-width, 0.5 m obstacle clearance)
               and outputs a ready-to-go PoseStamped in the map frame.
             -->
             <FindFreeSpace
               min_distance="1.5"
               max_distance="3.0"
+              random_score_margin="0.25"
               goal="{wander_goal}"/>
             <NavigateToPose pose="{wander_goal}"/>
             <!-- Non-blocking pause after a successful wandering goal. -->
