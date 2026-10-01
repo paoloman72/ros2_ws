@@ -2,7 +2,9 @@
 
 Condensed version of `README.md`: create the mission → test it locally with
 the platform's executor → generate the bundle.
-Assumes a ROS 2 Jazzy container (Gazebo + Nav2 only for the full e2e test).
+Requires a sourced ROS 2 Jazzy environment, native or containerized. Run
+commands from the workspace root. Gazebo and Nav2 are needed for navigation.
+See [Requirements](README.md#requirements) for environment setup.
 
 ## 1. Create
 
@@ -46,23 +48,19 @@ Rules of thumb:
 
 ## 2. Test locally
 
-On the host, enter the already running simulation container:
-
-```bash
-docker exec -it ros2_gz bash
-```
-
-Inside the container, build after switching to the branch containing the launch:
+From the workspace root:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-cd /ros2_ws
 colcon build --packages-select bt_devkit my_new_mission --symlink-install
 source install/setup.bash
 ```
 
+For Docker, first enter your container and locate its mounted workspace; see
+[Workspace environment](README.md#workspace-environment).
+
 For an existing mission use its package name, e.g. `wander_mission`, in both
-the build and launch commands. In each new container terminal, source both
+the build and launch commands. In each new terminal, source both
 ROS and the workspace again.
 
 **Quick check without a robot:**
@@ -72,7 +70,7 @@ ros2 launch bt_devkit mission.launch.py mission:=my_new_mission tree:=hello.xml 
 ```
 
 **Navigation mission:** Gazebo and Nav2 must already be running.
-For the original root-namespace robot:
+For a robot in the root namespace:
 
 ```bash
 ros2 launch bt_devkit mission.launch.py mission:=my_new_mission
@@ -90,16 +88,15 @@ remapping. Omit `robot` for root instead of passing `robot:=`.
 
 **Groot:** disabled by default. Add `groot:=true port:=1669` for robot1 or
 `groot:=true port:=1673` for robot2, if the selected port and the next one are
-free. Nav2 uses 1667–1668 and 1671–1672 in the supplied multirobot script.
-Configure the executor's address/port in Groot2; outside the VM, localhost
-does not refer to the VM.
+free. These are example assignments, not automatic namespace-based allocation.
+Configure a reachable executor address and the selected port in Groot2.
+For containers or VMs, check the network configuration for both ports.
 
 Do not run two unchanged wander missions concurrently: both return to (0,0).
 Avoid manual goals while a mission controls the robot.
 
 Full options, port troubleshooting and custom plugin paths:
-[MISSION_LAUNCH.md](MISSION_LAUNCH.md). The original `ros2 run` interface remains
-available. The launch is a local convenience and is not added to mission bundles.
+[MISSION_LAUNCH.md](MISSION_LAUNCH.md). Direct invocation with `ros2 run` is also available. The launch is a local convenience and is not added to mission bundles.
 
 ## 3. Bundle for the online simulator
 
@@ -114,7 +111,7 @@ python3 src/bt_devkit/scripts/bt_make_bundle.py src/my_new_mission \
   self-contained.
 - `-t behavior_trees/<other>.xml` — if the platform tree isn't `main.xml`.
 - The staging dir (`<zip>` without `.zip`) is kept: Gate 1
-  (`bt_bundle_builder --validate-only`) validates it.
+  (external platform tooling) validates it.
 
 Upload the zip — the platform compiles the plugin from the bundle's
 `include/`+`src/` and generates node registration from `bt_manifest.yaml`.

@@ -9,11 +9,10 @@ not use them. Built-in BehaviorTree.CPP nodes are excluded.
 
 ## Build and import (ROS 2 Jazzy)
 
-Inside the container:
+From the workspace root in a sourced Jazzy environment (native or containerized):
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-cd /ros2_ws
 colcon build --packages-select bt_devkit my_mission wander_mission --symlink-install
 source install/setup.bash
 ls src/my_mission/groot/node_models.xml
@@ -24,24 +23,16 @@ In Groot2, use **Import Models** and select the XML for the mission being
 edited, then open its `behavior_trees/main.xml`. Import one mission's catalog
 per project: the two plugins share several registration IDs.
 
-With the usual `~/ros2_ws:/ros2_ws` Docker mount, open these files directly
-from Groot2 on the host:
+Open `src/<mission>/groot/node_models.xml` relative to your workspace.
+For Docker, use the corresponding host path of your workspace mount when
+Groot2 runs on the host. Mount locations and container names are deployment
+choices; the repository does not require a particular layout.
 
-- `~/ros2_ws/src/my_mission/groot/node_models.xml`
-- `~/ros2_ws/src/wander_mission/groot/node_models.xml`
-
-Inside the container the same files are under `/ros2_ws/src/`.
-No manual copy is needed. These are regular files, not install symlinks.
-The build refreshes them when the exported content changes and restores a
-deleted source copy on the next build. Reimport in Groot2 after a change.
-
-The catalogs are generated and ignored by Git; do not edit them by hand.
-The `groot/.gitignore` file is hidden on Linux because its name starts with a
-dot; `node_models.xml` is not hidden. An icon marked with an X in a file manager
-can indicate a broken symlink: `--symlink-install` may create links to absolute
-paths inside the container that do not exist on the host. The source copies
-avoid that issue. Inspect `ls -l <path>` to distinguish a link from a regular
-file; an X icon alone is not enough to diagnose it.
+The source catalog is a regular file. Installed files created with
+`--symlink-install` may point to paths accessible only inside the build
+environment. The build refreshes the source copy when content changes and
+restores a deleted copy. Reimport it after changing registrations or ports.
+Generated catalogs are ignored by Git; do not edit them by hand.
 
 ## How generation works
 
@@ -59,9 +50,7 @@ regenerates it on the next normal build. Export failures fail the build
 instead of silently installing a stale catalog. One plugin per mission
 package is the supported layout.
 
-The executor, trees, runtime parameters and bundle registration contract
-remain unchanged. No Gazebo session, running robot or Groot TCP port is
-needed for export. The compiled plugin and its shared-library dependencies
+No Gazebo session, running robot or Groot TCP port is needed for export. The compiled plugin and its shared-library dependencies
 must be available in the sourced Jazzy environment.
 
 Port type metadata does not implement live JSON serialization of custom
@@ -122,7 +111,7 @@ The standalone catalog is not added to the simulator ZIP. An embedded
 metadata section is preserved in the copied tree; final platform validation
 remains authoritative.
 
-## Verify the change
+## Validation
 
 After the build, import both catalogs separately in Groot2:
 
@@ -142,8 +131,8 @@ For a runtime regression check without Gazebo:
 ros2 launch bt_devkit mission.launch.py mission:=my_mission tree:=hello.xml use_sim_time:=false
 ```
 
-With the usual simulation running, launch the same mission/namespace that
-worked previously. Model export does not change how robots are addressed.
+For a navigation check, start the simulation and launch a mission with the
+matching robot namespace.
 
 Packaging regression tests can run without ROS:
 

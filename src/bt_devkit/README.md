@@ -18,23 +18,25 @@ the online simulator**, using exactly the same executor the platform runs.
 | `cmake/bt_devkit.cmake` | `bt_devkit_add_mission()` helper: builds your single plugin `.so` (your nodes + extra nodes) and installs your trees. |
 | `scripts/bt_make_bundle.py` | Generates `bt_manifest.yaml` + the bundle ZIP from your project: nodes from `register_nodes.cpp`, deps from `package.xml`, tree from `behavior_trees/`; vendors Flow A nodes on request (`--vendor`). |
 
-The reference mission is the workspace-level **`my_mission`** package
-(one custom node + the vendored Nav2 navigation nodes, e2e-tested against
-Gazebo + Nav2) — copy it to start a new mission.
-
-> The ready-made navigation nodes (WaitForRobotReady, NavigateToPose, ...)
-> are intentionally NOT in this package: they live in the reference bundle
-> `custom_bt_example_success/`, which doubles as documentation.
-> `my_mission` carries locally vendored copies.
+The reference mission is [my_mission](../my_mission/README.md), which contains
+a greeting node and navigation nodes. Copy it to start a mission.
+Navigation nodes such as WaitForRobotReady and NavigateToPose are available
+in `src/my_mission/`; reusable DevKit nodes live in `extra_nodes/`.
 
 ## Requirements
 
-- **ROS 2 Jazzy** with **BehaviorTree.CPP v4 (4.9.0)** — the exact same
-  version the online simulator runs: `ros-jazzy-behaviortree-cpp`
-  (installed by rosdep as the `behaviortree_cpp` dependency).
-  It is already present in the `ros2-jazzy-gazebo` dev container
-  (pulled in by the Nav2 stack); nothing extra to install.
-- A ROS 2 workspace where you can `colcon build`.
+- ROS 2 Jazzy and the `behaviortree_cpp` dependency. The platform compatibility
+  target is BehaviorTree.CPP 4.9.0; align installed versions with the target
+  simulator before deployment.
+- A ROS 2 workspace with colcon and the package dependencies installed.
+- Gazebo and Nav2 for navigation missions; they are not needed for a
+  non-navigation tree or for model export.
+
+Commands below run from the workspace root (the directory containing `src/`),
+in a shell with ROS sourced. `/opt/ros/jazzy/setup.bash` is the standard binary
+installation path; adapt it if ROS is installed elsewhere. The environment can
+be native or containerized. Container images, mounts and startup scripts are
+managed by the user and are not supplied by this repository.
 
 ## Workflow
 
@@ -116,44 +118,38 @@ from the `bt_devkit_add_mission()` target, `tree.main` from
 `behavior_trees/` (default `main.xml`), and `monitoring.actions` when the
 tree navigates. Never edit it by hand — if something is wrong, fix the
 source (nodes, deps, trees) and re-generate. The staged bundle it
-produces is what Gate 1 (`bt_bundle_builder --validate-only`, guide §7.2)
-validates.
+produces is the input to the platform validation stage. The platform validator
+is external to this repository.
 
 ---
 
 ## Step 2 — Test locally
 
-### Container and workspace
+### Workspace environment
 
-Run ROS commands inside the Jazzy container. If `run_gazebo.sh` has already
-started the `ros2_gz` container, open another terminal **on the host**:
-
-```bash
-docker exec -it ros2_gz bash
-```
-
-Then **inside the container**:
+From the workspace root, build the selected mission and source its install:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-cd /ros2_ws
-source install/setup.bash
-```
-
-The container must be running. Do not start a second simulator to open a shell.
-After changing branches or installing this launch for the first time, build
-before running missions (replace `my_new_mission` with your mission package):
-
-```bash
 colcon build --packages-select bt_devkit my_new_mission --symlink-install
 source install/setup.bash
 ```
 
-If the workspace has not been built yet, omit the first `source install/setup.bash`
-until after the build. Use the same ROS domain as the simulation; a custom
-`ROS_DOMAIN_ID` configured only in another shell must also be set in this shell.
+Replace `my_new_mission` with your package name. Source ROS and
+`install/setup.bash` in each terminal used for ROS commands. Use the same
+`ROS_DOMAIN_ID` as the robot or simulation.
 
-### Run a mission with the unchanged executor
+For Docker, enter your already running container first. The placeholder below
+must be replaced with its actual name; then change to the workspace directory
+as mounted inside that container:
+
+```bash
+docker exec -it <container_name> bash
+```
+
+Opening another shell does not require starting another simulation.
+
+### Run a mission
 
 `mission.launch.py` configures the existing executable; it does not modify
 `bt_executor.cpp`, the plugin ABI or the simulator bundle.
@@ -203,7 +199,8 @@ and the node catalogs in [my_mission](../my_mission/README.md) and
 
 Groot is off by default. Add `groot:=true port:=1669` to monitor robot1,
 or `groot:=true port:=1673` for robot2, provided both ports of each pair are free.
-With the multirobot `run_gazebo.sh` configuration:
+Example port allocation, configured explicitly with `nav_groot_port` for
+Nav2 and `port` for each mission launch:
 
 | Process | TCP ports |
 |---|---|
@@ -212,17 +209,17 @@ With the multirobot `run_gazebo.sh` configuration:
 | Nav2 robot2 | 1671–1672 |
 | BT executor robot2 | 1673–1674 |
 
-Set the first port of the selected executor pair in the Groot2 connection dialog.
-Use `127.0.0.1` only when Groot runs on the same host/network as the container.
-If Groot runs outside VirtualBox, use a reachable VM address and configure the
-VM network accordingly. This is a Groot connection, not an HTTP web page.
-Check listeners with `ss -ltnp` on the Docker host; a bind error and a client
-connection timeout are different failures.
+Set the first port of the selected executor pair in Groot2. Use an address
+reachable from the machine running Groot2. Loopback (`127.0.0.1`) works only
+when the executor shares that network namespace, or the ports are forwarded
+there. Containers and VMs may require port publication or forwarding for both
+ports. Check listeners with `ss -ltnp` in the executor's network environment.
+A bind error and a client connection timeout are different failures.
 
 ### Simulation prerequisites
 
-Start Gazebo/Nav2 once, or reuse the simulation already running via
-`run_gazebo.sh`. For a root-namespace GUI simulation:
+Start Gazebo/Nav2 once, or reuse a running simulation. With the `mobile_robot`
+package built and sourced, a root-namespace GUI simulation starts with:
 
 ```bash
 ros2 launch mobile_robot full_simulation.launch.py
@@ -230,17 +227,16 @@ ros2 launch mobile_robot full_simulation.launch.py
 
 For a named robot add `namespace:=robot1`, then match it with `robot:=robot1`
 in the mission launch. In a server-only setup, use `use_rviz:=false` and the
-existing `gz_args` override; GPU LiDAR still needs a working rendering backend.
+`gz_args` override; GPU LiDAR still needs a working rendering backend.
 
 Run only one mission controller per robot and avoid concurrent manual goals.
-The existing wander mission returns to (0,0): assign distinct return targets
+The wander mission returns to (0,0): assign distinct return targets
 before running two copies concurrently.
 
-See [MISSION_LAUNCH.md](MISSION_LAUNCH.md) for all launch options and container
-commands, and [MULTIROBOT.md](../mobile_robot/MULTIROBOT.md) for simulation setup.
+See [MISSION_LAUNCH.md](MISSION_LAUNCH.md) for launch options, and [MULTIROBOT.md](../mobile_robot/MULTIROBOT.md) for simulation setup.
 
-Direct `ros2 run bt_devkit bt_executor --ros-args ...` remains supported.
-The executable's exit codes remain `0` SUCCESS, `1` FAILURE, `2` init/tick
+Direct invocation uses `ros2 run bt_devkit bt_executor --ros-args ...`.
+The executable's exit codes are `0` SUCCESS, `1` FAILURE, `2` init/tick
 error, `3` unexpected status (interruption: `130`). Do not assume that the
 surrounding `ros2 launch` process returns the same exit code.
 
@@ -264,7 +260,7 @@ project, stages exactly what the platform needs, and zips it flat
   writing nothing.
 - `-t behavior_trees/<other>.xml` if the platform tree is not `main.xml`.
 - the staging dir defaults to the zip path without `.zip` — keep it:
-  Gate 1 (`bt_bundle_builder --validate-only`) runs on that directory.
+  the platform validator can consume that directory (external tooling).
 - sanity check the artifact:
   `python3 -m zipfile -l bundles/my_new_mission_bundle.zip`
 
@@ -291,7 +287,7 @@ devkit into the bundle and adds the manifest entry:
 
 After upload the platform runs Gate 1 (`--validate-only`) on the bundle
 and builds the plugin from the manifest; the robot `config_json`/curl
-snippet is generated on the platform side (guide §6–9).
+snippet is generated on the platform side. Those tools are not included here.
 
 (This is how `bundles/my_mission_bundle.zip` is produced.)
 
@@ -309,7 +305,7 @@ snippet is generated on the platform side (guide §6–9).
   (`include/` + `src/` + a `register_nodes.cpp` entry for the local build;
   the platform entry is generated from the same call in Step 3).
   Self-contained: works locally and on the platform with no extra step.
-  This is the flow for navigation nodes copied from the reference bundle.
+  This is the flow for navigation nodes copied from the reference mission.
 
 Never register the same node ID in both flows (duplicate → registration
 error).
@@ -320,8 +316,8 @@ error).
    `extra_nodes/src/example_node.cpp` and rename (into
    `bt_devkit/extra_nodes/` for Flow A, into your project's `include/` +
    `src/` for Flow B).
-2. Fill in `providedPorts()` and the tick logic
-   (rules: `BT_MISSION_DEVELOPMENT_GUIDE.md` §3).
+2. Define `providedPorts()` and the tick logic. Use a StatefulActionNode for
+   work that remains RUNNING across ticks; see the ExampleNode scaffold.
 3. Register it: `factory.registerNodeType<YourNode>("YourNode");` in
    `extra_nodes/src/register_extra_nodes.cpp` (Flow A) or your
    `src/register_nodes.cpp` (Flow B) — the manifest entry is generated
@@ -332,17 +328,17 @@ error).
 
 ## Bringing navigation nodes into your project (Flow B)
 
-The devkit does not ship the proven navigation nodes on purpose; they live in
-`custom_bt_example_success/`, and `my_mission` already carries local copies.
+Navigation node sources are provided by the `my_mission` package.
 
-1. Copy the file pairs you need from `my_mission`:
+1. From the workspace root, copy the file pairs into your mission (replace
+   `my_new_mission` with the destination package):
 
-       cp src/my_mission/include/{wait_for_robot_ready,create_pose,navigate_to_pose}.hpp include/
-       cp src/my_mission/src/{wait_for_robot_ready,create_pose,navigate_to_pose}.cpp src/
+       cp src/my_mission/include/{wait_for_robot_ready,create_pose,navigate_to_pose}.hpp src/my_new_mission/include/
+       cp src/my_mission/src/{wait_for_robot_ready,create_pose,navigate_to_pose}.cpp src/my_new_mission/src/
 
 2. Add the new `.cpp` files to `SOURCES` in your `CMakeLists.txt`, and
    register the nodes in `src/register_nodes.cpp` (class names/namespace
-   exactly as in the reference bundle headers):
+   matching the copied headers):
 
        factory.registerNodeType<mobile_robot_bt::WaitForRobotReady>("WaitForRobotReady");
        factory.registerNodeType<mobile_robot_bt::CreatePose>("CreatePose");
@@ -358,36 +354,40 @@ The devkit does not ship the proven navigation nodes on purpose; they live in
    automatically when the tree uses `NavigateToPose`.
 
 5. Run with your Gazebo world + Nav2 stack up (map, scan, TF, and the
-   `navigate_to_pose` action) — same prereq as Gate 3 (guide §7.4).
+   `navigate_to_pose` action).
 
 This is exactly what the platform expects (bundles are self-contained);
 `bt_make_bundle.py` stages the same files for you (Step 3).
 
-## Roadmap: phase 2 — the converter
+## Bundle validation
 
-`bt_make_bundle.py` already automates the simple case: it scans the tree
-for the node IDs actually used, resolves the registrations (including the
-Flow A nodes from `bt_devkit::register_extra_nodes()`), vendors the Flow A
-nodes, generates `bt_manifest.yaml` (dependencies, `monitoring.actions`),
-shows the manifest for review, and — only when run without `--dry-run` —
-produces the flat ZIP.
-
-The platform-side converter remains the final authority; the remaining
-phase-2 work is to align the two (e.g. also emit the robot
-`config_json`/curl snippet locally, richer `monitoring` heuristics).
+Use `--dry-run` to inspect the generated manifest, then generate the source
+ZIP. Local compilation does not replace validation and execution in the target
+platform environment. Upload interfaces and platform validation tools are
+provided by the simulator deployment.
 
 ## Keeping the executor identical
 
-    scripts/check_executor_sync.sh
+`check_executor_sync.sh` compares this executor with
+`src/bt_runtime_tools/src/bt_executor.cpp` in the same workspace. The
+`bt_runtime_tools` package belongs to the simulator and is not included in
+this repository. The check requires that source to be available at that path:
 
-If `bt_runtime_tools` is updated on the platform side, copy the new
-`bt_executor.cpp` into this package and re-run the check.
+```bash
+bash src/bt_devkit/scripts/check_executor_sync.sh
+```
+
+Keep the executor synchronized with the target platform version; implement
+local launch configuration and authoring tools separately.
 
 ## References
 
-- `BT_MISSION_DEVELOPMENT_GUIDE.md` — the full development guide
-- `BT_BUNDLE_PREPARATION_GUIDE.md` — bundle/packaging reference
-- `custom_bt_example_success/` — 9 proven nodes + 4 trees (reference
-  bundle, platform side)
-- `src/my_mission/` — the local reference mission (e2e-tested; its bundle
-  was generated by `bt_make_bundle.py`)
+- [Quickstart](QUICKSTART.md)
+- [Mission launch](MISSION_LAUNCH.md)
+- [Groot2 models](GROOT_MODELS.md)
+- [Reference mission](../my_mission/README.md)
+- [Wandering mission](../wander_mission/README.md)
+- [Robot simulation](../mobile_robot/MULTIROBOT.md)
+
+Platform-specific development guides, bundle validators and upload interfaces
+are maintained with the target simulator; they are not part of this repository.
