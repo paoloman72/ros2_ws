@@ -53,6 +53,8 @@
               max_distance="3.0"
               goal="{wander_goal}"/>
             <NavigateToPose pose="{wander_goal}"/>
+            <!-- Non-blocking pause after a successful wandering goal. -->
+            <Sleep name="Pause between goals" msec="2000"/>
           </Sequence>
         </Repeat>
       </ForceSuccess>
