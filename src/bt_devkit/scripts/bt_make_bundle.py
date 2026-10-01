@@ -36,7 +36,7 @@ BT_BUILTINS = {
     "FallbackStar", "Reactor", "Inverter", "ForceSuccess", "ForceFailure",
     "RetryUntilSuccessful", "Repeat", "RateController", "SetBlackboardValue",
     "SetInput", "GetInput", "ComputeExpression", "WaitForBlackboardValue",
-    "Log", "Tree", "SubTree",
+    "Log", "Tree", "SubTree", "Sleep",
 }
 
 REGISTER_RE = re.compile(r'registerNodeType\s*<\s*([^>]+?)\s*>\s*\(\s*"([^"]+)"\s*\)')
