@@ -1,12 +1,15 @@
-# Robot singolo e preparazione multirobot (ROS 2 Jazzy)
+# Simulazione con uno o più robot su ROS 2 Jazzy
 
-Il comando esistente resta valido, con namespace vuoto, modello `mobile_robot`,
-spawn `(0, 0, 0.3)` e yaw `0`. `bt_executor` e i plugin delle missioni non cambiano.
-Questa modifica prepara l'isolamento: non introduce coordinamento di flotta.
+I launch supportano un robot nel namespace root oppure più robot con namespace
+separati. Il clock è condiviso; localizzazione e navigazione sono per robot.
+L'isolamento dei namespace non introduce coordinamento di flotta.
 
-## Prima verifica: comportamento precedente
+Eseguire i comandi dalla radice del workspace in un ambiente Jazzy nativo o
+in container. Immagini Docker, mount e script di avvio sono esterni alla repo.
 
-Dopo il checkout del branch, nel container e dalla radice del workspace:
+## Robot nel namespace root
+
+Preparare e avviare il package:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -18,7 +21,7 @@ ros2 launch mobile_robot full_simulation.launch.py
 ```
 
 Fermare prima le precedenti istanze di Gazebo, Nav2 ed executor. Per un avvio
-senza RViz usare `use_rviz:=false`; `gz_args` conserva il significato precedente.
+senza RViz usare `use_rviz:=false`; `gz_args` configura gli argomenti di Gazebo.
 
 In un secondo terminale, dopo aver caricato gli stessi setup:
 
@@ -32,7 +35,7 @@ ros2 run tf2_ros tf2_echo map base_link
 
 AMCL e navigatore devono risultare `active`; la trasformazione deve essere
 disponibile. Verificare mappa e scansioni in RViz, assegnare un goal libero e
-provare la missione BT abituale con il comando precedente. Non avviare goal
+provare la missione BT abituale con il launch di bt_devkit. Non avviare goal
 manuali mentre la missione controlla il robot.
 
 I controlli automatici della configurazione possono essere eseguiti senza Gazebo:
@@ -41,7 +44,7 @@ I controlli automatici della configurazione possono essere eseguiti senza Gazebo
 python3 -m unittest discover -s src/mobile_robot/test -p test_simulation_config.py -v
 ```
 
-## Seconda verifica: un solo robot con namespace
+## Robot con namespace
 
 Fermare completamente la prova precedente, quindi:
 
@@ -69,18 +72,12 @@ Nav2/robot sui topic radice `/cmd_vel`, `/scan`, `/odom`, `/tf`, `/tf_static`.
 I frame interni restano `map`, `odom`, `base_link`: non aggiungere il namespace
 ai frame dei goal. Buffer TF diversi non devono unire flussi con frame omonimi.
 
-Per avviare la missione nello stesso container, aprire un secondo terminale
-**sull'host**:
-
-```bash
-docker exec -it ros2_gz bash
-```
-
-Poi **nel container**, dopo aver installato il nuovo launch di bt_devkit:
+Per avviare la missione, aprire un altro terminale nello stesso ambiente ROS e
+raggiungere la radice del workspace. Per un container vedere
+[Workspace environment](../bt_devkit/README.md#workspace-environment).
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-cd /ros2_ws
 colcon build --packages-select bt_devkit wander_mission --symlink-install
 source install/setup.bash
 ros2 launch bt_devkit mission.launch.py mission:=wander_mission robot:=robot1
@@ -94,7 +91,7 @@ ad esempio `port:=1673`. Groot è disabilitato per default.
 Il launch configura namespace, percorsi e remapping TF/scan senza modificare
 `bt_executor`. L'action relativa `navigate_to_pose` risolve automaticamente il
 namespace. Ulteriori nomi assoluti nei plugin richiedono remapping espliciti.
-La missione wander mantiene il ritorno a (0,0): modificarlo prima dell'uso
+La missione wander prevede il ritorno a (0,0): modificarlo prima dell'uso
 simultaneo di più istanze. Per nodi in altri container/macchine verificare DDS.
 
 Vedere [MISSION_LAUNCH.md](../bt_devkit/MISSION_LAUNCH.md) per opzioni e diagnostica
@@ -105,7 +102,7 @@ delle porte. Il comando diretto `ros2 run bt_devkit bt_executor` resta disponibi
 - `world.launch.py`: Gazebo e un solo bridge `/clock`.
 - `spawn_robot.launch.py`: modello, robot_state_publisher, bridge robot e alias TF LiDAR.
 - `gazebo.launch.py`: compatibilità con l'avvio mondo + robot, senza Nav2.
-- `robot.launch.py`: spawn e bringup dopo la stessa attesa di 8 secondi usata prima.
+- `robot.launch.py`: spawn e bringup con un ritardo di avvio di 8 secondi.
 - `full_simulation.launch.py`: mondo + robot completo.
 - `bringup.launch.py`: localizzazione e navigazione per il namespace richiesto.
 - `slam.launch.py`: SLAM nel namespace richiesto; usarlo al posto di AMCL.
@@ -117,7 +114,7 @@ La posa `x`, `y`, `yaw` inizializza sia lo spawn sia AMCL: si assume che il fram
 map della mappa salvata sia allineato al mondo Gazebo. In caso contrario impostare
 la posa corretta con il tool Initial Pose prima della navigazione.
 
-## In seguito: due robot nello stesso mondo
+## Due robot nello stesso mondo
 
 Avviare `world.launch.py` una sola volta; poi usare `robot.launch.py` per ciascun
 robot con namespace e nome Gazebo univoci, pose libere e separate, porte Groot
@@ -126,22 +123,16 @@ Ogni robot ha map server, AMCL e Nav2 indipendenti, con la stessa mappa salvata.
 
 Esempio di suddivisione porte sullo stesso host: Nav2 robot1 `1667` (e `1668`),
 executor robot1 `1669` (e `1670`), Nav2 robot2 `1671` (e `1672`), executor robot2
-`1673` (e `1674`). Le porte si assegnano con `nav_groot_port` e con l'esistente
-argomento `port` di `mission.launch.py` (che imposta `groot_port` nell'executor). Rendere univoci anche gli eventuali
+`1673` (e `1674`). Le porte si assegnano con `nav_groot_port` e con l'argomento `port` di `mission.launch.py` (che imposta `groot_port` nell'executor). Rendere univoci anche gli eventuali
 `ready_file` per robot/esecuzione; usare barriere `start_file` intenzionalmente
 condivise o separate e pulire file di esecuzioni precedenti.
 
-La missione wander attuale ritorna a `(0,0)` in map: prima di usarla con due
+La missione wander ritorna a `(0,0)` in map: prima di usarla con due
 robot va definita una destinazione di ritorno distinta. La navigazione locale
-non risolve automaticamente precedenze o stalli tra robot. Il completamento
-runtime della prova a due robot e questi adattamenti di missione sono successivi
-alla regressione con un robot.
+non risolve automaticamente precedenze o stalli tra robot.
 
-## Limiti della validazione di questa PR
+## Controlli operativi
 
-Verificati trasformazione dei parametri root/namespaced, isolamento dei bridge,
-configurazione RViz, sintassi e generazione Xacro. ROS 2/Gazebo non sono disponibili
-nell'ambiente di modifica: build, caricamento effettivo dei parametri nei nodi,
-TF, lifecycle e movimento vanno verificati nel container Jazzy con i passi sopra.
-Il timeout fisso di avvio e i giunti mobili restano quelli della configurazione
-precedente e non vengono presentati come problemi risolti da questa modifica.
+Verificare TF, lifecycle, scansioni e navigazione per ogni namespace. Il bringup
+usa un ritardo fisso di 8 secondi: attendere che i nodi siano attivi prima di
+lanciare una missione. Per goal con frame omonimi, mantenere separati i buffer TF.
